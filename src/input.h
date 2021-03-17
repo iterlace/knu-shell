@@ -81,9 +81,6 @@ private:
      *   "--log=DEBUG -o \"/var/log/test.txt\"" => {"--log=DEBUG", "-o", "/var/log/test.txt"}
      * Groups:
      *   1: entire argument body
-     *   2: possible double quote at the beginning
-     *   3: content inside the quotes
-     *   4: possible double quote at the end
      */
     static const std::regex argumentsRegex;
 
