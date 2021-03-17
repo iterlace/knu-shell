@@ -3,4 +3,7 @@ project(shell)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(shell main.cpp src/shell.cpp src/shell.h src/input.cpp src/input.h)
+include_directories(src)
+
+add_subdirectory(src)
+add_subdirectory(tests)

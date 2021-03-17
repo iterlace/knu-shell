@@ -21,7 +21,7 @@ private:
     // environment vars and added at runtime variables
     std::map<std::string, std::string> variables;
     // commands
-    std::map<CommandName, void(Command)> commands;
+    std::map<CommandName, void (Shell::*)(Command)> commands;
 
     // Commands
     void echo(const std::string& args);

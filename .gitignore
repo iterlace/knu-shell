@@ -1,0 +1,44 @@
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+
+# Ignore cmake generated directories and files.
+CMakeFiles
+CTestTestfile.cmake
+Makefile
+cmake_install.cmake
+/bin
+/lib
+/Win32
+CMakeCache.txt
+
+# CMake stuff
+cmake-build-debug/
+cmake-build-release/
+
