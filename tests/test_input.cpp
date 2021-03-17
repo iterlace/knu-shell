@@ -67,6 +67,4 @@ TEST(InputTest, ParseTest) {
 
     // test assign multiple values
     ASSERT_THROW(Input::parse("A=1 2"), InvalidCommandError);
-
-
 }
