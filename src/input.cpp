@@ -5,9 +5,9 @@
 // regex patterns
 const std::regex Input::stripRegex = std::regex(R"(^\s*(.*?)\s*?$)");
 const std::regex Input::argumentsRegex = std::regex(R"(((?:\"(?:\\[^\\]|[^"]+)\")|(?:(?:\\[^\\]|\S)+)))");
-const std::regex Input::commandRegex = std::regex(R"(^\s*?(\D[\w]+)(?:\s*(.*))?$)");
+const std::regex Input::commandRegex = std::regex(R"(^\s*?(\D[\w]*)(?:\s*(.*))?$)");
 const std::regex Input::reduceEscapeCharRegex = std::regex(R"(([^\\]|^)\\)");
-const std::regex Input::assignmentRegex = std::regex(R"(^([\w\D]+)\s*?=\s*?(.*?)\s*?$)");
+const std::regex Input::assignmentRegex = std::regex(R"(^(\D[a-zA-Z0-9]*)\s*?=\s*?(.*?)\s*?$)");
 
 
 Input::Input() = default;
@@ -16,24 +16,26 @@ Input::~Input() = default;
 
 
 Command Input::next() {
-    if (currentInput.empty()) {
-        currentInput = read();
+    if (inputBuffer.empty()) {
+        inputBuffer.push(read());
     }
-    Command cmd = parse(currentInput);
-    currentInput.erase();
+    std::string input = inputBuffer.front();
+    inputBuffer.pop();
+    Command cmd = parse(input);
     return cmd;
 }
 
 
 bool Input::end() {
-    if (currentInput.empty()) {
-        currentInput = read();
+    if (inputBuffer.empty()) {
+        inputBuffer.push(read());
     }
-    return currentInput == "quit";
+    return inputBuffer.front() == "quit";
 }
 
 std::string Input::read() {
     std::string input;
+    printf("prompt> ");
     getline(std::cin, input);
     return strip(input);
 }

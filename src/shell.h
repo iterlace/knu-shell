@@ -2,10 +2,19 @@
 #include <vector>
 #include <map>
 
+#include <functional>
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <deque>
+#include <map>
+#include <cassert>
+
 #include "input.h"
 
 #ifndef SHELL_SHELL_H
 #define SHELL_SHELL_H
+
 
 class Shell {
 public:
@@ -14,6 +23,7 @@ public:
 
     int run();
 private:
+    typedef void (Shell::*ShellFn)(CommandArgs args);
     // program arguments
     std::vector<std::string> arguments;
     // environment variables
@@ -21,16 +31,20 @@ private:
     // environment vars and added at runtime variables
     std::map<std::string, std::string> variables;
     // commands
-    std::map<CommandName, void (Shell::*)(Command)> commands;
+    std::map<CommandName, ShellFn> commands;
+
+    Input input;
 
     // Commands
-    void echo(const std::string& args);
-    void set(const std::string& args);
-    void argc();
-    void argv();
-    void envp();
-    void help();
+    void echo(CommandArgs args);
+    void set(CommandArgs args);
+    void argc(CommandArgs args);
+    void argv(CommandArgs args);
+    void envp(CommandArgs args);
+    void help(CommandArgs args);
 };
+
+
 
 #endif //SHELL_SHELL_H
 

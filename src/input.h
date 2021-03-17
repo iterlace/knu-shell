@@ -5,10 +5,18 @@
 #include <utility>
 #include <string>
 #include <regex>
+#include <queue>
+
 
 typedef std::string CommandName;
 typedef std::vector<std::string> CommandArgs;
-typedef std::pair<CommandName, CommandArgs> Command;
+
+struct Command {
+    CommandName name;
+    CommandArgs args;
+
+    Command(CommandName _name, CommandArgs _args) : name(_name), args(_args) {};
+};
 
 struct InvalidCommandError : public std::exception {};
 
@@ -28,7 +36,7 @@ public:
      */
     bool end();
 private:
-    std::string currentInput;
+    std::queue<std::string> inputBuffer;
 
     /**
      * Reads latest user input

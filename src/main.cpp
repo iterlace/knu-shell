@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[], char *envp[]) {
     Shell s = Shell(argv, envp);
-//    s.run();
+    s.run();
     return 0;
 }
 
