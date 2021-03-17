@@ -4,10 +4,10 @@
 
 // regex patterns
 const std::regex Input::stripRegex = std::regex(R"(^\s*(.*?)\s*?$)");
-const std::regex Input::argumentsRegex = std::regex(R"((("?)(?:\\[^\\]|[^\s"])+(\2)))");
-const std::regex Input::commandRegex = std::regex(R"(^\s*?(\w+)(?:\s*(.*))?$)");
+const std::regex Input::argumentsRegex = std::regex(R"(((?:\"(?:\\[^\\]|[^"]+)\")|(?:(?:\\[^\\]|\S)+)))");
+const std::regex Input::commandRegex = std::regex(R"(^\s*?(\D[\w]+)(?:\s*(.*))?$)");
 const std::regex Input::reduceEscapeCharRegex = std::regex(R"(([^\\]|^)\\)");
-const std::regex Input::assignmentRegex = std::regex(R"(^(\w+)\s*?=\s*?(.*?)\s*?$)");
+const std::regex Input::assignmentRegex = std::regex(R"(^([\w\D]+)\s*?=\s*?(.*?)\s*?$)");
 
 
 Input::Input() = default;
@@ -48,7 +48,7 @@ Command Input::parse(std::string const &input) {
         if (values.size() > 1) {
             throw InvalidCommandError();
         } else if (values.empty()) {
-            return Command("set", {name});
+            return Command("set", {name, ""});
         } else {
             return Command("set", {name, values[0]});
         }
