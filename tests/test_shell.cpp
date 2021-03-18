@@ -8,3 +8,6 @@
 #define private public
 #include "../src/shell.h"
 #undef private
+
+
+TEST(ShellTest, )

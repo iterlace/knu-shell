@@ -2,9 +2,10 @@
 #include <string>
 
 #include "shell.h"
+#include "util.h"
 
 
-Shell::Shell(char **argv, char **envp) {
+Shell::Shell(std::istream& in, std::ostream& out, char **argv, char **envp) : istream(&in), ostream(&out) {
     for (char **var = envp; *var != nullptr; var++) {
         // push to the environment vector
         environment.emplace_back(*var);
@@ -19,7 +20,7 @@ Shell::Shell(char **argv, char **envp) {
         arguments.emplace_back(*arg);
     }
 
-    input = Input();
+    input = Input(in, out);
 
     commands["echo"] = &Shell::echo;
     commands["set"] = &Shell::set;
@@ -68,16 +69,16 @@ void Shell::echo(CommandArgs args) {
             // find a related closing bracket
             int closing_bracket = content.find('}', i);
             if (closing_bracket == -1) {
-                printf("Syntax error: variable placeholder \"${\" at position %d is not enclosed with \"}\". "
-                       "If \"${\" are not special symbols, then use a preceding backslash "
-                       "(e.g. \"\\${\" or \"$\\{\").\n", i);
+                sprint(*ostream, "Syntax error: variable placeholder \"${\" at position %d is not enclosed with \"}\". "
+                        "If \"${\" are not special symbols, then use a preceding backslash "
+                        "(e.g. \"\\${\" or \"$\\{\").\n", i);
                 return;
             }
 
             // a variable key, enclosed in ${ }
             std::string key = content.substr(i + 2, closing_bracket - (i + 2));
             if (!variables.contains(key)) {
-                printf("Variable \"%s\" is not set!\n", key.c_str());
+                sprint(*ostream, "Variable \"%s\" is not set!\n", key.c_str());
                 return;
             }
             std::string value = variables[key];
@@ -96,7 +97,7 @@ void Shell::echo(CommandArgs args) {
             buf[buf_i++] = content[i++];
         }
     }
-    printf("%s\n", buf);
+    sprint(*ostream, "%s\n", buf);
 }
 
 void Shell::set(CommandArgs args) {
@@ -109,24 +110,24 @@ void Shell::set(CommandArgs args) {
 
 
 void Shell::argc(CommandArgs args) {
-    printf("%zu\n", arguments.size());
+    sprint(*ostream, "%zu\n", arguments.size());
 }
 
 
 void Shell::argv(CommandArgs args) {
     for (const std::string& var : arguments)
-        printf("%s\n", var.c_str());
+        sprint(*ostream, "%s\n", var.c_str());
 }
 
 
 void Shell::envp(CommandArgs args) {
     for (const std::string& var : environment)
-        printf("%s\n", var.c_str());
+        sprint(*ostream, "%s\n", var.c_str());
 }
 
 
 void Shell::help(CommandArgs args) {
-    printf("Supported commands and instructions:\n"
+    sprint(*ostream, "Supported commands and instructions:\n"
            "  variable=\"value\"\n"
            "  echo \"<string>\"\n"
            "  argc\n"

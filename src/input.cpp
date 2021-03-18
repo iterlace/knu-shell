@@ -1,6 +1,7 @@
-
 #include <iostream>
+
 #include "input.h"
+#include "util.h"
 
 // regex patterns
 const std::regex Input::stripRegex = std::regex(R"(^\s*(.*?)\s*?$)");
@@ -10,7 +11,18 @@ const std::regex Input::reduceEscapeCharRegex = std::regex(R"(([^\\]|^)\\)");
 const std::regex Input::assignmentRegex = std::regex(R"(^(\D[a-zA-Z0-9]*)\s*?=\s*?(.*?)\s*?$)");
 
 
-Input::Input() = default;
+bool Command::operator==(const Command &cmd) const {
+    return cmd.name == name && cmd.args == args;
+}
+
+
+Input::Input() : istream(&std::cin) {
+
+}
+
+Input::Input(std::istream& in, std::ostream& out) : istream(&in), ostream(&out) {
+
+}
 
 Input::~Input() = default;
 
@@ -35,8 +47,8 @@ bool Input::end() {
 
 std::string Input::read() {
     std::string input;
-    printf("prompt> ");
-    getline(std::cin, input);
+    sprint(*ostream, "prompt> ");
+    getline(*istream, input);
     return strip(input);
 }
 

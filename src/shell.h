@@ -18,11 +18,15 @@
 
 class Shell {
 public:
-    Shell(char *argv[], char *envp[]);
+    Shell(std::istream &in, std::ostream &out, char *argv[], char *envp[]);
     ~Shell();
 
     int run();
 private:
+    std::istream *istream;
+    std::ostream *ostream;
+    Input input;
+
     typedef void (Shell::*ShellFn)(CommandArgs args);
     // program arguments
     std::vector<std::string> arguments;
@@ -33,7 +37,6 @@ private:
     // commands
     std::map<CommandName, ShellFn> commands;
 
-    Input input;
 
     // Commands
     void echo(CommandArgs args);

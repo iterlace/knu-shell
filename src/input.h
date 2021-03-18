@@ -16,6 +16,7 @@ struct Command {
     CommandArgs args;
 
     Command(CommandName _name, CommandArgs _args) : name(_name), args(_args) {};
+    bool operator==(const Command &cmd) const;
 };
 
 struct InvalidCommandError : public std::exception {};
@@ -24,6 +25,7 @@ struct InvalidCommandError : public std::exception {};
 class Input {
 public:
     Input();
+    Input(std::istream& in, std::ostream& out);
     ~Input();
 
     /**
@@ -36,6 +38,8 @@ public:
      */
     bool end();
 private:
+    std::istream *istream;
+    std::ostream *ostream;
     std::queue<std::string> inputBuffer;
 
     /**
