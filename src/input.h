@@ -37,6 +37,14 @@ public:
      * @return is session closed
      */
     bool end();
+
+    /**
+     * Parse an entire command
+     * @param input the entire string from user
+     * @return Command
+     * @throws InvalidCommandError
+     */
+    static Command parse(std::string const &input);
 private:
     std::istream *istream;
     std::ostream *ostream;
@@ -52,14 +60,6 @@ private:
 
     // Input processing methods
 
-
-    /**
-     * Parse an entire command
-     * @param input the entire string from user
-     * @return
-     * @throws InvalidCommandError
-     */
-    static Command parse(std::string const &input);
 
     /**
      *

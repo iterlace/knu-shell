@@ -10,4 +10,18 @@
 #undef private
 
 
-TEST(ShellTest, )
+TEST(ShellTest, EchoSimpleVariableTest) {
+    std::stringstream o;
+    Shell shell = Shell(o, o, {}, {});
+    shell.set({"A", "\"123\""});
+    shell.echo({"${A}"});
+    ASSERT_EQ(o.str(), "123");
+}
+
+TEST(ShellTest, EchoComplexVariableTest) {
+    std::stringstream o;
+    Shell shell = Shell(o, o, {}, {});
+    shell.set({"A", ""});
+    shell.echo({"${A}"});
+    ASSERT_EQ(o.str(), "123");
+}

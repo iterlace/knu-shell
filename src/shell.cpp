@@ -69,7 +69,8 @@ void Shell::echo(CommandArgs args) {
             // find a related closing bracket
             int closing_bracket = content.find('}', i);
             if (closing_bracket == -1) {
-                sprint(*ostream, "Syntax error: variable placeholder \"${\" at position %d is not enclosed with \"}\". "
+                sprint(*ostream,
+                       "Syntax error: variable placeholder \"${\" at position %d is not enclosed with \"}\". "
                         "If \"${\" are not special symbols, then use a preceding backslash "
                         "(e.g. \"\\${\" or \"$\\{\").\n", i);
                 return;
@@ -135,5 +136,82 @@ void Shell::help(CommandArgs args) {
            "  envp\n"
            "  quit\n");
 }
+
+
+
+Node::~Node() {
+    for (auto c : children) {
+        delete c;
+    }
+}
+
+
+
+FormatTree::FormatTree(std::string const &str, Shell *shell_) {
+    shell = shell_;
+    source = str;
+    char buf[str.size()+1];
+    strcpy(buf, str.c_str());
+    parse(&buf[0], &buf[str.size()]);
+}
+
+
+char* FormatTree::parse(char *start, char *end) {
+    // current StringNode buffer
+    char buf[end-start];
+    int buf_i = 0;  // current buf index
+
+    for(char *c = start; c<=end;) {
+        if (*c == '$' && end-c >= 3) {  // 1 for '$', 2 for '(' or '{', 3 for ')' or '}'.
+            // variable entrypoint
+            if (*(c+1) == '{') {
+                // save the buffer
+                // TODO: move to a separate method
+                auto *previous_node = new StringNode(shell);
+                buf[buf_i] = '\0';
+                previous_node->parse(buf, buf+buf_i);
+                children.emplace_back(previous_node);
+                buf[0] = '\0';
+                buf_i = 0;
+
+                auto *node = new VariableNode(shell);
+                c = node->parse(c, end);
+                children.emplace_back(node);
+                continue;
+            } else if (*(c+1) == '(') {
+                // TODO: process command
+                buf[buf_i] = *c;
+                c++;
+                continue;
+            }
+        }
+        // default behaviour
+        buf[buf_i] = *c;
+        c++;
+    }
+    return end;
+}
+
+
+char * StringNode::parse(char *start, char *end) {
+    source = std::string(start, end);
+    return end;
+}
+
+std::string StringNode::build() {
+    return source;
+}
+
+
+
+char * VariableNode::parse(char *start, char *end) {
+
+}
+
+std::string VariableNode::build() {
+    return source;
+}
+
+
 
 
