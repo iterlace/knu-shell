@@ -28,3 +28,11 @@ void sprint(std::ostream& out, const std::string& format, ...) {
     va_end(args);
     out << std::string(vec.begin(), vec.end());
 }
+
+std::string cutOuterQuotes(const std::string& s) {
+    if (s.length() >= 2 && s[0] == '"' && s[s.length()-1] == '"' && s[s.length()-2] != '\\') {
+        return s.substr(1, s.length()-2);
+    } else {
+        return s;
+    }
+}

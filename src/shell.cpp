@@ -1,11 +1,12 @@
 #include <iostream>
 #include <string>
+#include <iterator>
 
 #include "shell.h"
 #include "util.h"
 
 
-Shell::Shell(std::istream& in, std::ostream& out, char **argv, char **envp) : istream(&in), ostream(&out) {
+Shell::Shell(std::istream &in, std::ostream &out, char **argv, char **envp) : istream(&in), ostream(&out) {
     for (char **var = envp; *var != nullptr; var++) {
         // push to the environment vector
         environment.emplace_back(*var);
@@ -13,7 +14,7 @@ Shell::Shell(std::istream& in, std::ostream& out, char **argv, char **envp) : is
         // parse and push to the local variables hashmap
         std::string var_s = *var;
         std::string name = var_s.substr(0, var_s.find('='));
-        std::string value = var_s.substr(var_s.find('=')+1, var_s.length()-1);
+        std::string value = var_s.substr(var_s.find('=') + 1, var_s.length() - 1);
         variables[name] = value;
     }
     for (char **arg = argv; *arg != nullptr; arg++) {
@@ -48,7 +49,7 @@ int Shell::run() {
                 ShellFn method = commands[cmd.name];
                 (this->*method)(cmd.args);
             }
-        } catch (InvalidCommandError& e) {
+        } catch (InvalidCommandError &e) {
             help({});
             continue;
         }
@@ -57,51 +58,25 @@ int Shell::run() {
 }
 
 
-void Shell::echo(CommandArgs args) {
-    std::string content = args[0];
-    char buf[512] = {0};
-
-    // i - current 'content' position. skips double quotes at start and in the end
-    // buf_i - current 'buf' position
-    for (int i=0, buf_i=0; i < content.length();) {
-        // process a variable placeholder
-        if (content[i] == '$' && content[i + 1] == '{') {
-            // find a related closing bracket
-            int closing_bracket = content.find('}', i);
-            if (closing_bracket == -1) {
-                sprint(*ostream,
-                       "Syntax error: variable placeholder \"${\" at position %d is not enclosed with \"}\". "
-                        "If \"${\" are not special symbols, then use a preceding backslash "
-                        "(e.g. \"\\${\" or \"$\\{\").\n", i);
-                return;
-            }
-
-            // a variable key, enclosed in ${ }
-            std::string key = content.substr(i + 2, closing_bracket - (i + 2));
-            if (!variables.contains(key)) {
-                sprint(*ostream, "Variable \"%s\" is not set!\n", key.c_str());
-                return;
-            }
-            std::string value = variables[key];
-
-            // write variable to the result string
-            for (char c : value)
-                buf[buf_i++] = c;
-
-            i = closing_bracket+1;
-            continue;
-        } else {
-            // if ran onto escape char (\) - skip it and print the next character in current iteration
-            if (content[i] == '\\')
-                i++;
-            // copy the character
-            buf[buf_i++] = content[i++];
-        }
-    }
-    sprint(*ostream, "%s\n", buf);
+std::string Shell::getVariable(std::string name) {
+    if (!variables.contains(name))
+        return "";
+    return variables[name];
 }
 
-void Shell::set(CommandArgs args) {
+
+void Shell::echo(const CommandArgs& args) {
+    std::string result;
+    if (args.empty()) {
+        result = "";
+    } else {
+        FormatTree tree(args[0], this);
+        result = tree.format();
+    }
+    sprint(*ostream, "%s\n", result.c_str());
+}
+
+void Shell::set(const CommandArgs& args) {
     std::string key = args[0];
     std::string value = args[1];
 
@@ -110,108 +85,113 @@ void Shell::set(CommandArgs args) {
 }
 
 
-void Shell::argc(CommandArgs args) {
+void Shell::argc(const CommandArgs& args) {
     sprint(*ostream, "%zu\n", arguments.size());
 }
 
 
-void Shell::argv(CommandArgs args) {
-    for (const std::string& var : arguments)
+void Shell::argv(const CommandArgs& args) {
+    for (const std::string &var : arguments)
         sprint(*ostream, "%s\n", var.c_str());
 }
 
 
-void Shell::envp(CommandArgs args) {
-    for (const std::string& var : environment)
+void Shell::envp(const CommandArgs& args) {
+    for (const std::string &var : environment)
         sprint(*ostream, "%s\n", var.c_str());
 }
 
 
-void Shell::help(CommandArgs args) {
+void Shell::help(const CommandArgs& args) {
     sprint(*ostream, "Supported commands and instructions:\n"
-           "  variable=\"value\"\n"
-           "  echo \"<string>\"\n"
-           "  argc\n"
-           "  argv\n"
-           "  envp\n"
-           "  quit\n");
+                     "  variable=\"value\"\n"
+                     "  echo \"<string>\"\n"
+                     "  argc\n"
+                     "  argv\n"
+                     "  envp\n"
+                     "  quit\n");
 }
 
 
-
-Node::~Node() {
-    for (auto c : children) {
-        delete c;
-    }
-}
-
-
-
-FormatTree::FormatTree(std::string const &str, Shell *shell_) {
+FormatTree::FormatTree(std::string str, Shell *shell_) : Node(shell_) {
     shell = shell_;
     source = str;
-    char buf[str.size()+1];
-    strcpy(buf, str.c_str());
-    parse(&buf[0], &buf[str.size()]);
+    auto iterator = str.begin();
+    build(iterator, str.end());
 }
 
 
-char* FormatTree::parse(char *start, char *end) {
+bool FormatTree::build(std::string::iterator &i, std::string::iterator end) {
     // current StringNode buffer
-    char buf[end-start];
-    int buf_i = 0;  // current buf index
+    std::string buf;
 
-    for(char *c = start; c<=end;) {
-        if (*c == '$' && end-c >= 3) {  // 1 for '$', 2 for '(' or '{', 3 for ')' or '}'.
-            // variable entrypoint
-            if (*(c+1) == '{') {
+    for (; i < end;) {
+        std::unique_ptr<Node> customNode;
+        if (*i == '$' && *(i + 1) == '{' && (end - i) >= 3) {
+            customNode = std::make_unique<VariableNode>(shell);
+        }
+        // TODO: $()
+
+        if (customNode) {
+            if (customNode->build(i, end)) {
                 // save the buffer
-                // TODO: move to a separate method
-                auto *previous_node = new StringNode(shell);
-                buf[buf_i] = '\0';
-                previous_node->parse(buf, buf+buf_i);
-                children.emplace_back(previous_node);
-                buf[0] = '\0';
-                buf_i = 0;
+                auto previousNode = std::make_unique<StringNode>(shell);
+                std::string::iterator bufIterator = buf.begin();
+                previousNode->build(bufIterator, buf.end());
+                buf.clear();
 
-                auto *node = new VariableNode(shell);
-                c = node->parse(c, end);
-                children.emplace_back(node);
-                continue;
-            } else if (*(c+1) == '(') {
-                // TODO: process command
-                buf[buf_i] = *c;
-                c++;
+                children.emplace_back(std::move(previousNode));
+                children.emplace_back(std::move(customNode));
                 continue;
             }
         }
         // default behaviour
-        buf[buf_i] = *c;
-        c++;
+        buf.push_back(*i);
+        i++;
     }
-    return end;
+    if (!buf.empty()) {
+        auto stringNode = std::make_unique<StringNode>(shell);
+        std::string::iterator bufIterator = buf.begin();
+        stringNode->build(bufIterator, buf.end());
+        children.emplace_back(std::move(stringNode));
+    }
+    return true;
+}
+
+std::string FormatTree::format() {
+    std::string buf;
+    for (auto &node : children) {
+        buf += node->format();
+    }
+    return buf;
 }
 
 
-char * StringNode::parse(char *start, char *end) {
-    source = std::string(start, end);
-    return end;
+bool StringNode::build(std::string::iterator &i, std::string::iterator end) {
+    source = std::string(i, end);
+    return true;
 }
 
-std::string StringNode::build() {
+std::string StringNode::format() {
     return source;
 }
 
 
+const std::regex VariableNode::parseRegex = std::regex(R"(^(\$\{\s*?([a-zA-Z0-9_]*?)\s*?\}))");
 
-char * VariableNode::parse(char *start, char *end) {
-
+bool VariableNode::build(std::string::iterator &i, std::string::iterator end) {
+    std::smatch match;
+    std::string s = std::string(i, end);
+    if (std::regex_search(s, match, parseRegex)) {
+        source = match[1];
+        variableName = match[2];
+        std::advance(i, source.length());
+    } else {
+        return false;
+    }
+    return true;
 }
 
-std::string VariableNode::build() {
-    return source;
+std::string VariableNode::format() {
+    return shell->getVariable(variableName);
 }
-
-
-
-

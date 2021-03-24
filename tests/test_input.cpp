@@ -37,10 +37,10 @@ TEST(InputTest, ParseArgsTest) {
 
     // test space inside double quotes
     ASSERT_EQ(Input::parseArgs("\"Hello, World!\""),
-              result({"\"Hello, World!\""}));
+              result({"Hello, World!"}));
 
     ASSERT_EQ(Input::parseArgs("main.cpp --log-level=DEBUG -v 1 -i \"/var/log/abc.txt\" -o /var/log/a\\\\ b\\\\ c.txt"),
-              result({"main.cpp", "--log-level=DEBUG", "-v", "1", "-i", "\"/var/log/abc.txt\"",
+              result({"main.cpp", "--log-level=DEBUG", "-v", "1", "-i", "/var/log/abc.txt",
                            "-o", "/var/log/a\\ b\\ c.txt"}));
 }
 
@@ -48,7 +48,7 @@ TEST(InputTest, ParseArgsTest) {
 TEST(InputTest, ParseTest) {
     // test basic usage
     ASSERT_EQ(Input::parse("echo \"Hello, World\""),
-              Command("echo", {"\"Hello, World\""}));
+              Command("echo", {"Hello, World"}));
 
     // test no arguments
     ASSERT_EQ(Input::parse("argv"),
@@ -59,6 +59,10 @@ TEST(InputTest, ParseTest) {
 
     // test assign
     ASSERT_EQ(Input::parse("A=1"),
+              Command("set", {"A", "1"}));
+
+    // test assign with double quotes
+    ASSERT_EQ(Input::parse("A=\"1\""),
               Command("set", {"A", "1"}));
 
     // test assign no value

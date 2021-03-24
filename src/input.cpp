@@ -8,7 +8,7 @@ const std::regex Input::stripRegex = std::regex(R"(^\s*(.*?)\s*?$)");
 const std::regex Input::argumentsRegex = std::regex(R"(((?:\"(?:\\[^\\]|[^"]+)\")|(?:(?:\\[^\\]|\S)+)))");
 const std::regex Input::commandRegex = std::regex(R"(^\s*?(\D[\w]*)(?:\s*(.*))?$)");
 const std::regex Input::reduceEscapeCharRegex = std::regex(R"(([^\\]|^)\\)");
-const std::regex Input::assignmentRegex = std::regex(R"(^(\D[a-zA-Z0-9]*)\s*?=\s*?(.*?)\s*?$)");
+const std::regex Input::assignmentRegex = std::regex(R"(^\s*?(\D[a-zA-Z0-9_]*)\s*?=\s*?(.*?)\s*?$)");
 
 
 bool Command::operator==(const Command &cmd) const {
@@ -64,7 +64,7 @@ Command Input::parse(std::string const &input) {
         } else if (values.empty()) {
             return Command("set", {name, ""});
         } else {
-            return Command("set", {name, values[0]});
+            return Command("set", {name, cutOuterQuotes(values[0])});
         }
     } else { // Process a common command
         std::smatch command;
@@ -84,7 +84,7 @@ std::string Input::strip(std::string const &input) {
 }
 
 CommandArgs Input::parseArgs(std::string const &input) {
-    CommandArgs result;
+    CommandArgs result{};
 
     std::sregex_iterator matches(input.begin(), input.end(), argumentsRegex);
     std::sregex_iterator end;
@@ -93,6 +93,7 @@ CommandArgs Input::parseArgs(std::string const &input) {
         // save the 2nd capture group
         std::string value = (*matches)[1];
         value = std::regex_replace(value, reduceEscapeCharRegex, "$1");
+        value = cutOuterQuotes(value);
         result.emplace_back(value);
     }
 

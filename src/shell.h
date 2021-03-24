@@ -10,28 +10,45 @@
 #include <map>
 #include <cassert>
 
-#include "input.h"
-
 #ifndef SHELL_SHELL_H
 #define SHELL_SHELL_H
 
+#include "input.h"
 
 
-struct NodeParsingError : public std::exception {};
+struct NodeParsingError : public std::exception {
+};
 
 
 class Shell {
 public:
     Shell(std::istream &in, std::ostream &out, char *argv[], char *envp[]);
+
     ~Shell();
 
+    /**
+     * Runs the shell interpreter. Exits on "quit" command.
+     */
     int run();
+
+    /**
+     * Returns a saved variable
+     * @param name variable name
+     * @return saved value or empty string if nothing found
+     */
+    std::string getVariable(std::string name);
+
 private:
+    // input stream
     std::istream *istream;
+    // output stream
     std::ostream *ostream;
+    // related Input object
     Input input;
 
-    typedef void (Shell::*ShellFn)(CommandArgs args);
+    // commands handlers
+    typedef void (Shell::*ShellFn)(const CommandArgs&);
+
     // program arguments
     std::vector<std::string> arguments;
     // environment variables
@@ -43,33 +60,52 @@ private:
 
 
     // Commands
-    void echo(CommandArgs args);
-    void set(CommandArgs args);
-    void argc(CommandArgs args);
-    void argv(CommandArgs args);
-    void envp(CommandArgs args);
-    void help(CommandArgs args);
+    void echo(const CommandArgs& args);
+
+    void set(const CommandArgs& args);
+
+    void argc(const CommandArgs& args);
+
+    void argv(const CommandArgs& args);
+
+    void envp(const CommandArgs& args);
+
+    void help(const CommandArgs& args);
 };
 
 
+/**
+ * Format tree classes
+ */
 
 enum NodeType {
     STRING,
     VARIABLE,
+    // COMMAND,
 };
 
 class Node {
 public:
+    explicit Node(Shell *shell_) : shell(shell_) {};
+
+    /**
+     * Builds current component from the given string
+     * @param i, @param end - string bounds to process
+     * @return success
+     */
+    virtual bool build(std::string::iterator &i, std::string::iterator end) = 0;
+
+    /**
+     * @return formatted string
+     */
+    virtual std::string format() = 0;
+
+protected:
     // original string
     std::string source;
-    std::vector<Node*> children;
-
-    explicit Node(Shell *shell_) : shell(shell_) {};
-    virtual ~Node();
-
-    virtual char* parse(char* start, char* end);
-    virtual std::string build();
-protected:
+    // children nodes
+    std::vector<std::unique_ptr<Node>> children;
+    // related shell
     Shell *shell;
 };
 
@@ -80,35 +116,36 @@ public:
 
     explicit StringNode(Shell *shell_) : Node(shell_) {};
 
-    char* parse(char* start, char* end);
-    std::string build();
+    bool build(std::string::iterator &i, std::string::iterator end) override;
+
+    std::string format() override;
 };
 
 
 class VariableNode : public Node {
 public:
     static const NodeType type = NodeType::VARIABLE;
+    std::string variableName;
 
     explicit VariableNode(Shell *shell_) : Node(shell_) {};
 
-    char* parse(char* start, char* end);
-    std::string build();
+    bool build(std::string::iterator &i, std::string::iterator end) override;
+
+    std::string format() override;
+
 private:
-
+    static const std::regex parseRegex;
 };
-
 
 
 class FormatTree : public Node {
 public:
-    FormatTree(std::string const &str, Shell *shell_);
+    FormatTree(std::string str, Shell *shell_);
 
-    char* parse(char* start, char* end);
-    std::string build();
+    bool build(std::string::iterator &i, std::string::iterator end) override;
+
+    std::string format() override;
 };
-
-
-
 
 #endif //SHELL_SHELL_H
 
