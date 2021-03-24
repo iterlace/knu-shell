@@ -47,7 +47,7 @@ private:
     Input input;
 
     // commands handlers
-    typedef void (Shell::*ShellFn)(const CommandArgs&);
+    typedef void (Shell::*ShellFn)(const CommandArgs &);
 
     // program arguments
     std::vector<std::string> arguments;
@@ -60,17 +60,17 @@ private:
 
 
     // Commands
-    void echo(const CommandArgs& args);
+    void echo(const CommandArgs &args);
 
-    void set(const CommandArgs& args);
+    void set(const CommandArgs &args);
 
-    void argc(const CommandArgs& args);
+    void argc(const CommandArgs &args);
 
-    void argv(const CommandArgs& args);
+    void argv(const CommandArgs &args);
 
-    void envp(const CommandArgs& args);
+    void envp(const CommandArgs &args);
 
-    void help(const CommandArgs& args);
+    void help(const CommandArgs &args);
 };
 
 
@@ -98,7 +98,7 @@ public:
     /**
      * @return formatted string
      */
-    virtual std::string format() = 0;
+    virtual std::string getFormatted();
 
 protected:
     // original string
@@ -107,6 +107,8 @@ protected:
     std::vector<std::unique_ptr<Node>> children;
     // related shell
     Shell *shell;
+
+    std::vector<std::unique_ptr<Node>> parseString(std::string::iterator &i, std::string::iterator end) const;
 };
 
 
@@ -118,20 +120,17 @@ public:
 
     bool build(std::string::iterator &i, std::string::iterator end) override;
 
-    std::string format() override;
+    std::string getFormatted() override;
 };
 
 
 class VariableNode : public Node {
 public:
     static const NodeType type = NodeType::VARIABLE;
-    std::string variableName;
 
     explicit VariableNode(Shell *shell_) : Node(shell_) {};
 
     bool build(std::string::iterator &i, std::string::iterator end) override;
-
-    std::string format() override;
 
 private:
     static const std::regex parseRegex;
@@ -143,9 +142,8 @@ public:
     FormatTree(std::string str, Shell *shell_);
 
     bool build(std::string::iterator &i, std::string::iterator end) override;
-
-    std::string format() override;
 };
+
 
 #endif //SHELL_SHELL_H
 

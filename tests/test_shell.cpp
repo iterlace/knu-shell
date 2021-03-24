@@ -26,6 +26,22 @@ TEST(ShellTest, EchoSimpleVariableTest) {
     ASSERT_EQ(s, "path = /etc");
 }
 
+
+TEST(ShellTest, EchoEmbeddedVariableTest) {
+    std::stringstream o;
+    char **empty = new char*; empty[0] = "\0";
+    Shell shell = Shell(o, o, empty, empty);
+
+    shell.set({"HOME", "/etc"});
+    shell.set({"CONFIG", "${HOME}/app/config.ini"});
+    shell.set({"HOME", "/home/a"});
+    shell.echo({"config = ${CONFIG}"});
+
+    std::string s = o.str();
+    s = s.substr(0, s.length()-2);  // skip "\n\0" in the end
+    ASSERT_EQ(s, "config = /home/a/app/config.ini");
+}
+
 TEST(ShellTest, EchoEmptyVariableTest) {
     std::stringstream o;
     char **empty = new char*; empty[0] = "\0";
@@ -48,7 +64,7 @@ TEST(FormatTreeTest, FormatTreeParseTest) {
     shell.set({"username", "Vovan"});
 
     auto tree = FormatTree("You are ${username}!", &shell);
-    ASSERT_EQ(tree.format(), "You are Vovan!");
+    ASSERT_EQ(tree.getFormatted(), "You are Vovan!");
 }
 
 

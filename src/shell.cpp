@@ -65,18 +65,18 @@ std::string Shell::getVariable(std::string name) {
 }
 
 
-void Shell::echo(const CommandArgs& args) {
+void Shell::echo(const CommandArgs &args) {
     std::string result;
     if (args.empty()) {
         result = "";
     } else {
         FormatTree tree(args[0], this);
-        result = tree.format();
+        result = tree.getFormatted();
     }
     sprint(*ostream, "%s\n", result.c_str());
 }
 
-void Shell::set(const CommandArgs& args) {
+void Shell::set(const CommandArgs &args) {
     std::string key = args[0];
     std::string value = args[1];
 
@@ -85,24 +85,24 @@ void Shell::set(const CommandArgs& args) {
 }
 
 
-void Shell::argc(const CommandArgs& args) {
+void Shell::argc(const CommandArgs &args) {
     sprint(*ostream, "%zu\n", arguments.size());
 }
 
 
-void Shell::argv(const CommandArgs& args) {
+void Shell::argv(const CommandArgs &args) {
     for (const std::string &var : arguments)
         sprint(*ostream, "%s\n", var.c_str());
 }
 
 
-void Shell::envp(const CommandArgs& args) {
+void Shell::envp(const CommandArgs &args) {
     for (const std::string &var : environment)
         sprint(*ostream, "%s\n", var.c_str());
 }
 
 
-void Shell::help(const CommandArgs& args) {
+void Shell::help(const CommandArgs &args) {
     sprint(*ostream, "Supported commands and instructions:\n"
                      "  variable=\"value\"\n"
                      "  echo \"<string>\"\n"
@@ -113,17 +113,11 @@ void Shell::help(const CommandArgs& args) {
 }
 
 
-FormatTree::FormatTree(std::string str, Shell *shell_) : Node(shell_) {
-    shell = shell_;
-    source = str;
-    auto iterator = str.begin();
-    build(iterator, str.end());
-}
-
-
-bool FormatTree::build(std::string::iterator &i, std::string::iterator end) {
+std::vector<std::unique_ptr<Node>>
+Node::parseString(std::string::iterator &i, std::string::iterator end) const {
     // current StringNode buffer
     std::string buf;
+    std::vector<std::unique_ptr<Node>> result;
 
     for (; i < end;) {
         std::unique_ptr<Node> customNode;
@@ -140,8 +134,8 @@ bool FormatTree::build(std::string::iterator &i, std::string::iterator end) {
                 previousNode->build(bufIterator, buf.end());
                 buf.clear();
 
-                children.emplace_back(std::move(previousNode));
-                children.emplace_back(std::move(customNode));
+                result.emplace_back(std::move(previousNode));
+                result.emplace_back(std::move(customNode));
                 continue;
             }
         }
@@ -153,15 +147,16 @@ bool FormatTree::build(std::string::iterator &i, std::string::iterator end) {
         auto stringNode = std::make_unique<StringNode>(shell);
         std::string::iterator bufIterator = buf.begin();
         stringNode->build(bufIterator, buf.end());
-        children.emplace_back(std::move(stringNode));
+        result.emplace_back(std::move(stringNode));
     }
-    return true;
+    return result;
 }
 
-std::string FormatTree::format() {
+
+std::string Node::getFormatted() {
     std::string buf;
     for (auto &node : children) {
-        buf += node->format();
+        buf += node->getFormatted();
     }
     return buf;
 }
@@ -172,7 +167,7 @@ bool StringNode::build(std::string::iterator &i, std::string::iterator end) {
     return true;
 }
 
-std::string StringNode::format() {
+std::string StringNode::getFormatted() {
     return source;
 }
 
@@ -181,17 +176,45 @@ const std::regex VariableNode::parseRegex = std::regex(R"(^(\$\{\s*?([a-zA-Z0-9_
 
 bool VariableNode::build(std::string::iterator &i, std::string::iterator end) {
     std::smatch match;
-    std::string s = std::string(i, end);
-    if (std::regex_search(s, match, parseRegex)) {
+    std::string str = std::string(i, end);
+    if (std::regex_search(str, match, parseRegex)) {
+        // variable data
         source = match[1];
-        variableName = match[2];
+        std::string name = match[2];
+        std::string value = shell->getVariable(name);
+
+        // increment iterator
         std::advance(i, source.length());
+
+        auto valueIterator = value.begin();
+        auto nodes = parseString(valueIterator, value.end());
+        if (!nodes.empty()) {
+            for (auto &node : nodes)
+                children.emplace_back(std::move(node));
+        } else {
+            auto valueNode = std::make_unique<StringNode>(shell);
+            valueIterator = value.begin();
+            valueNode->build(valueIterator, value.end());
+            children.emplace_back(std::move(valueNode));
+        }
     } else {
         return false;
     }
     return true;
 }
 
-std::string VariableNode::format() {
-    return shell->getVariable(variableName);
+
+FormatTree::FormatTree(std::string str, Shell *shell_) : Node(shell_) {
+    shell = shell_;
+    source = str;
+    auto iterator = str.begin();
+    build(iterator, str.end());
+}
+
+
+bool FormatTree::build(std::string::iterator &i, std::string::iterator end) {
+    auto nodes = parseString(i, end);
+    for (auto &node : nodes)
+        children.emplace_back(std::move(node));
+    return true;
 }
