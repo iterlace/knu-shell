@@ -147,7 +147,7 @@ Node::~Node() {
 
 
 
-FormatTree::FormatTree(std::string const &str, Shell *shell_) {
+FormatTree::FormatTree(Shell *shell, std::string const &str, Shell *shell_) : Node(shell) {
     shell = shell_;
     source = str;
     char buf[str.size()+1];

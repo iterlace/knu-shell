@@ -101,7 +101,7 @@ private:
 
 class FormatTree : public Node {
 public:
-    FormatTree(std::string const &str, Shell *shell_);
+    FormatTree(Shell *shell, std::string const &str, Shell *shell_);
 
     char* parse(char* start, char* end);
     std::string build();
