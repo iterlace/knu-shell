@@ -31,7 +31,6 @@ protected:
     void ST_4_AssignmentOperator();
     void ST_5_String();
     void ST_6_Link();
-    void ST_7_Text();
     void ST_End();
 
     // Transition callbacks

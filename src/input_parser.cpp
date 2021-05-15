@@ -104,9 +104,8 @@ void InputParser::ST_5_String() {
         // transition callbacks
         TR_AddLink();
     } else {
-        NEXT_STATE(ST_7_Text)
+        NEXT_STATE(ST_5_String)
         // transition callbacks
-        TR_AddText();
         TR_AppendText();
     }
 }
@@ -126,26 +125,6 @@ void InputParser::ST_6_Link() {
         NEXT_STATE(ST_6_Link)
         // transition callbacks
         TR_AppendLink();
-    }
-}
-
-void InputParser::ST_7_Text() {
-    fsm->pop_state();
-
-    if (get_char() == '\"' && get_char(index - 1) != '\\') {
-        NEXT_STATE(ST_5_String)
-        // transition callbacks
-        TR_Delegate();
-    } else if (get_char(index) == '$' &&
-               get_char(index + 1) == '{' &&
-               get_char(index - 1) != '\\') {
-        NEXT_STATE(ST_5_String)
-        // transition callbacks
-        TR_Delegate();
-    } else {
-        NEXT_STATE(ST_7_Text)
-        // transition callbacks
-        TR_AppendText();
     }
 }
 
@@ -201,6 +180,9 @@ void InputParser::TR_AppendTempToken() {
 
 void InputParser::TR_AppendText() {
     if (auto s = dynamic_cast<String *>(tokens.back())) {
+        if (s->get_vector().empty()) {
+            TR_AddText();
+        }
         if (auto t = dynamic_cast<Text *>(s->get_vector().back())) {
             t->push_back(get_char());
         } else {
@@ -212,6 +194,9 @@ void InputParser::TR_AppendText() {
 
 void InputParser::TR_AppendLink() {
     if (auto s = dynamic_cast<String *>(tokens.back())) {
+        if (s->get_vector().empty()) {
+            TR_AddLink();
+        }
         if (auto l = dynamic_cast<Link *>(s->get_vector().back())) {
             l->push_back(get_char());
         } else {
