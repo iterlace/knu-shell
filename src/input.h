@@ -6,26 +6,114 @@
 #include <string>
 #include <regex>
 #include <queue>
+#include <vector>
+#include <string>
+
+#include "fsm.h"
 
 
-typedef std::string CommandName;
-typedef std::vector<std::string> CommandArgs;
-
-struct Command {
-    CommandName name;
-    CommandArgs args;
-
-    Command(CommandName _name, CommandArgs _args) : name(_name), args(_args) {};
-    bool operator==(const Command &cmd) const;
+class Token {
+public:
+    virtual std::string to_str() const = 0;
 };
 
-struct InvalidCommandError : public std::exception {};
+/**
+ * Base class for all flat, string-based tokens
+ */
+class StringToken : public Token {
+public:
+    StringToken() = default;
+
+    StringToken(std::string s);
+
+    void push_back(char c);
+
+    std::string to_str() const override;
+    std::string get_raw() const;
+protected:
+    std::string value;
+};
+
+
+class TempToken : public StringToken {
+public:
+};
+
+
+// Command name (e.g "echo", "argv")
+class CommandName : public StringToken {
+public:
+    CommandName(std::string s) : StringToken(std::move(s)) {};
+    CommandName(const TempToken &token);
+};
+
+
+// Resolved variable name (e.g USER="John", where USER is a VariableName)
+class VariableName : public StringToken {
+public:
+    VariableName(const TempToken &token);
+};
+
+
+// Pure text without links
+class Text : public StringToken {
+public:
+};
+
+
+// Link to some variable
+class Link : public StringToken {
+public:
+};
+
+
+/**
+ * String is a composite class, containing Text and Link
+ */
+class String : public Token {
+public:
+    String();
+
+    ~String();
+
+    template<class T>
+    void push_back(T token) {
+        static_assert(std::is_base_of<Token, T>::value, "Must be derived from Token");
+        T *t = new T;
+        *t = token;
+        literals.push_back(t);
+    };
+
+    const std::vector<Token *>& get_vector();
+
+    std::string format(std::map<std::string, std::string> variables);
+    std::string to_str() const override;
+
+protected:
+    std::vector<Token *> literals;
+};
+
+
+class Command {
+public:
+    Command(const std::vector<Token *>&);
+    ~Command();
+
+private:
+    std::vector<Token *> tokens;
+};
+
+
+struct InvalidCommandError : public std::exception {
+};
 
 
 class Input {
 public:
     Input();
-    Input(std::istream& in, std::ostream& out);
+
+    Input(std::istream &in, std::ostream &out);
+
     ~Input();
 
     /**
@@ -45,6 +133,7 @@ public:
      * @throws InvalidCommandError
      */
     static Command parse(std::string const &input);
+
 private:
     std::istream *istream;
     std::ostream *ostream;
@@ -55,76 +144,7 @@ private:
      * @return
      */
     std::string read();
-
-
-
-    // Input processing methods
-
-
-    /**
-     *
-     * @param input
-     * @return
-     */
-    static std::string strip(std::string const &input);
-
-    /**
-     * Splits arguments string by spaces
-     * @param input arguments string
-     * @return vector of parsed arguments
-     */
-    static CommandArgs parseArgs(std::string const &input);
-
-
-
-    // String processing regex patterns
-
-
-    /**
-     * Example:
-     *   "  Hello, world  "  => "Hello, world"
-     * Groups:
-     *   1: stripped content
-     */
-    static const std::regex stripRegex;
-
-    /**
-     * Example:
-     *   "--log=DEBUG -o \"/var/log/test.txt\"" => {"--log=DEBUG", "-o", "/var/log/test.txt"}
-     * Groups:
-     *   1: entire argument body
-     */
-    static const std::regex argumentsRegex;
-
-    /**
-     * Example:
-     *   "echo \"Hello, World\"" => {"echo", "\"Hello, World\""}
-     * Groups:
-     *   1: command name (e.g. "echo")
-     *   2: arguments
-     */
-    static const std::regex commandRegex;
-
-    /**
-     * Example:
-     *   "\\A" => "A"
-     * Groups:
-     *   1: a character BEFORE the deleted backslash.
-     *
-     * When using in regex_replace, you MUST pass "$1" formatting rather than ""
-     */
-    static const std::regex reduceEscapeCharRegex;
-
-    /**
-     * Example:
-     *   "A=123" => {"A", "123"}
-     * Groups:
-     *   1: variable name
-     *   2: value
-     */
-    static const std::regex assignmentRegex;
 };
-
 
 
 #endif //SHELL_INPUT_H

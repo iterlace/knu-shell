@@ -1,18 +1,74 @@
 #include <iostream>
 
 #include "input.h"
+
+#include "input_parser.h"
 #include "util.h"
 
-// regex patterns
-const std::regex Input::stripRegex = std::regex(R"(^\s*(.*?)\s*?$)");
-const std::regex Input::argumentsRegex = std::regex(R"(((?:\"(?:\\[^\\]|[^"]+)\")|(?:(?:\\[^\\]|\S)+)))");
-const std::regex Input::commandRegex = std::regex(R"(^\s*?(\D[\w]*)(?:\s*(.*))?$)");
-const std::regex Input::reduceEscapeCharRegex = std::regex(R"(([^\\]|^)\\)");
-const std::regex Input::assignmentRegex = std::regex(R"(^(\D[a-zA-Z0-9]*)\s*?=\s*?(.*?)\s*?$)");
+
+StringToken::StringToken(std::string s) {
+    value.assign(s.begin(), s.end());
+}
+
+void StringToken::push_back(char c) {
+    value.push_back(c);
+}
+
+std::string StringToken::to_str() const {
+    return value;
+}
+
+std::string StringToken::get_raw() const {
+    return value;
+}
+
+CommandName::CommandName(const TempToken &token) {
+    value = token.get_raw();
+}
+
+VariableName::VariableName(const TempToken &token) {
+    value = token.get_raw();
+}
 
 
-bool Command::operator==(const Command &cmd) const {
-    return cmd.name == name && cmd.args == args;
+String::String() {
+
+}
+
+String::~String() {
+    for (int i = 0; i < literals.size(); i++) {
+        delete literals[i];
+    }
+}
+
+//template<class T>
+//void String::push_back(T token) {
+//    static_assert(std::is_base_of<Token, T>::value, "Must be derived from Token");
+//    T *t = new T;
+//    *t = token;
+//    literals.push_back(t);
+//}
+
+const std::vector<Token *>& String::get_vector() {
+    return literals;
+}
+
+std::string String::format(std::map<std::string, std::string> variables) {
+    return "";
+}
+
+std::string String::to_str() const {
+    return "";
+}
+
+
+Command::Command(const std::vector<Token *> &tokens) {
+    // TODO
+//    this->tokens.assign(tokens.begin(), tokens.end());
+}
+
+Command::~Command() {
+
 }
 
 
@@ -20,7 +76,7 @@ Input::Input() : istream(&std::cin) {
 
 }
 
-Input::Input(std::istream& in, std::ostream& out) : istream(&in), ostream(&out) {
+Input::Input(std::istream &in, std::ostream &out) : istream(&in), ostream(&out) {
 
 }
 
@@ -49,52 +105,12 @@ std::string Input::read() {
     std::string input;
     sprint(*ostream, "prompt> ");
     getline(*istream, input);
-    return strip(input);
+    return input;
 }
 
 
 Command Input::parse(std::string const &input) {
-    // Transform variable assignment operation into common command
-    std::smatch assignment;
-    if (std::regex_search(input, assignment, assignmentRegex)) {
-        CommandName name = assignment[1];
-        std::vector<std::string> values = parseArgs(assignment[2]);
-        if (values.size() > 1) {
-            throw InvalidCommandError();
-        } else if (values.empty()) {
-            return Command("set", {name, ""});
-        } else {
-            return Command("set", {name, values[0]});
-        }
-    } else { // Process a common command
-        std::smatch command;
-        if (std::regex_search(input, command, commandRegex)) {
-            CommandName name = command[1];
-            CommandArgs args = parseArgs(command[2]);
-            return Command(name, args);
-        }
-    }
+    InputParser parser{input};
 
     throw InvalidCommandError();
-}
-
-
-std::string Input::strip(std::string const &input) {
-    return std::regex_replace(input, stripRegex, "$1");
-}
-
-CommandArgs Input::parseArgs(std::string const &input) {
-    CommandArgs result;
-
-    std::sregex_iterator matches(input.begin(), input.end(), argumentsRegex);
-    std::sregex_iterator end;
-
-    for(; matches != end; matches++) {
-        // save the 2nd capture group
-        std::string value = (*matches)[1];
-        value = std::regex_replace(value, reduceEscapeCharRegex, "$1");
-        result.emplace_back(value);
-    }
-
-    return result;
 }

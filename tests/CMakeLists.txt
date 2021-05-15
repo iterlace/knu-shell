@@ -7,5 +7,5 @@ enable_testing()
 include_directories(${gtest_SOURCE_DIR}/include)
 link_libraries(shell_lib)
 
-add_executable(shell_test main.cpp test_input.cpp test_shell.cpp)
+add_executable(shell_test main.cpp test_input.cpp test_shell.cpp test_input_parser.cpp test_input_parser.cpp)
 target_link_libraries(shell_test gtest gtest_main)
