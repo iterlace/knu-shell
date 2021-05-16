@@ -168,7 +168,8 @@ void InputParser::TR_AddLink() {
 }
 
 void InputParser::TR_AddAssignment() {
-    // TODO
+    auto t = new AssignmentToken();
+    tokens.push_back(t);
 }
 
 void InputParser::TR_AppendTempToken() {

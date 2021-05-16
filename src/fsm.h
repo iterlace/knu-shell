@@ -24,7 +24,6 @@ public:
 
 private:
     T *client;
-    // TODO: maybe make a pair of <State, Data>
     std::stack<StateFn> stack;
 };
 

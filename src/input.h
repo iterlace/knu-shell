@@ -20,11 +20,11 @@ public:
 /**
  * Base class for all flat, string-based tokens
  */
-class StringToken : public Token {
+class BaseStringToken : public Token {
 public:
-    StringToken() = default;
+    BaseStringToken() = default;
 
-    StringToken(std::string s);
+    BaseStringToken(std::string s);
 
     void push_back(char c);
 
@@ -35,34 +35,41 @@ protected:
 };
 
 
-class TempToken : public StringToken {
+class TempToken : public BaseStringToken {
 public:
 };
 
 
 // Command name (e.g "echo", "argv")
-class CommandName : public StringToken {
+class CommandName : public BaseStringToken {
 public:
-    CommandName(std::string s) : StringToken(std::move(s)) {};
+    CommandName(std::string s) : BaseStringToken(std::move(s)) {};
     CommandName(const TempToken &token);
 };
 
 
 // Resolved variable name (e.g USER="John", where USER is a VariableName)
-class VariableName : public StringToken {
+class VariableName : public BaseStringToken {
 public:
     VariableName(const TempToken &token);
 };
 
 
+class AssignmentToken : public Token {
+public:
+    AssignmentToken() = default;
+    std::string to_str() const override;
+};
+
+
 // Pure text without links
-class Text : public StringToken {
+class Text : public BaseStringToken {
 public:
 };
 
 
 // Link to some variable
-class Link : public StringToken {
+class Link : public BaseStringToken {
 public:
 };
 

@@ -6,19 +6,19 @@
 #include "util.h"
 
 
-StringToken::StringToken(std::string s) {
+BaseStringToken::BaseStringToken(std::string s) {
     value.assign(s.begin(), s.end());
 }
 
-void StringToken::push_back(char c) {
+void BaseStringToken::push_back(char c) {
     value.push_back(c);
 }
 
-std::string StringToken::to_str() const {
+std::string BaseStringToken::to_str() const {
     return value;
 }
 
-std::string StringToken::get_raw() const {
+std::string BaseStringToken::get_raw() const {
     return value;
 }
 
@@ -28,6 +28,10 @@ CommandName::CommandName(const TempToken &token) {
 
 VariableName::VariableName(const TempToken &token) {
     value = token.get_raw();
+}
+
+std::string AssignmentToken::to_str() const {
+    return "=";
 }
 
 
