@@ -5,6 +5,7 @@
 #include <stack>
 #include <vector>
 #include <optional>
+#include <set>
 
 #include "util.h"
 
@@ -13,15 +14,6 @@ struct Transition;
 class NextState;
 typedef void (FSM::*TransitionCallback)();
 typedef unsigned char State;
-
-
-static const std::string LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-static const std::string DIGITS = "0123456789";
-static const std::string SYMBOLS = "|!#$%&()*+,-./:;>=<?@[\\]^_`{}~\"\'";
-static const std::string CHARS = LETTERS + DIGITS + SYMBOLS;
-static const std::string SPACES = " ";
-static const std::string ANY_CHAR = "";
-static const std::string LINE_END = "\n";
 
 
 enum FSMResult {
@@ -66,6 +58,7 @@ struct Transition {
     NextState next_state;
     std::vector<TransitionCallback> callbacks;
 };
+
 
 #define TC(method) \
 static_cast<TransitionCallback>(&CLASS::method)

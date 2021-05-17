@@ -8,13 +8,14 @@
 
 #include "input.h"
 #include "fsm.h"
+#include "charset.h"
 
 
 struct InvalidString : public std::exception {};
 
 
 struct StringTransition : public Transition {
-    std::string charset;
+    Charset charset;
 };
 
 class StringParser : public FSM {

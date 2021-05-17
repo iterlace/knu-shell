@@ -6,13 +6,14 @@
 
 #include "input.h"
 #include "fsm.h"
+#include "charset.h"
 
 
 struct InvalidInput : public std::exception {};
 
 
 struct InputTransition : public Transition {
-    std::string charset;
+    Charset charset;
 };
 
 class InputParser : public FSM {

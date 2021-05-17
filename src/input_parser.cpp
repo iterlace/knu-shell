@@ -49,7 +49,7 @@ std::optional<Transition> InputParser::get_transition(State state) {
             continue;
         if (transition.charset == ANY_CHAR)
             return transition;
-        if (transition.charset.find(current_char) != std::string::npos)
+        if (transition.charset.contains(current_char))
             return transition;
     }
     return std::nullopt;
