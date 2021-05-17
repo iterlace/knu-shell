@@ -75,8 +75,13 @@ std::string StringToken::to_str() const {
 
 
 Command::Command(const std::vector<Token *> &tokens) {
-    // TODO
     this->tokens.assign(tokens.begin(), tokens.end());
+}
+
+Command::~Command() {
+    for (int i = 0; i < tokens.size(); i++) {
+        delete tokens[i];
+    }
 }
 
 const std::vector<Token *> &Command::get_tokens() const {
@@ -85,21 +90,21 @@ const std::vector<Token *> &Command::get_tokens() const {
 
 
 Command Input::next() {
-    if (inputBuffer.empty()) {
-        inputBuffer.push(read());
+    if (input_buffer.empty()) {
+        input_buffer.push(read());
     }
-    std::string input = inputBuffer.front();
-    inputBuffer.pop();
+    std::string input = input_buffer.front();
+    input_buffer.pop();
     Command cmd = parse(input);
     return cmd;
 }
 
 
 bool Input::end() {
-    if (inputBuffer.empty()) {
-        inputBuffer.push(read());
+    if (input_buffer.empty()) {
+        input_buffer.push(read());
     }
-    return inputBuffer.front() == "quit";
+    return input_buffer.front() == "quit";
 }
 
 std::string Input::read() {

@@ -88,4 +88,3 @@ bool NextState::keep_stack() const {
     return stack;
 }
 
-//template class FSM<InputParser>;

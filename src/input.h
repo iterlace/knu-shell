@@ -104,6 +104,7 @@ protected:
 class Command {
 public:
     Command(const std::vector<Token *>&);
+    ~Command();
 
     const std::vector<Token*>& get_tokens() const;
 private:
@@ -142,7 +143,7 @@ public:
 private:
     std::istream *istream;
     std::ostream *ostream;
-    std::queue<std::string> inputBuffer;
+    std::queue<std::string> input_buffer;
 
     /**
      * Reads latest user input
