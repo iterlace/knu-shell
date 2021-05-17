@@ -57,7 +57,7 @@ protected:
             {S_LINK_FRAME, S_START,      {TC(T_Delegate), TC(T_Delegate)}, CHARS + SPACES},
 
             {S_LINK,       S_START,      {TC(T_Skip)},                     "}"},
-            {S_LINK,       S_LINK,       {TC(T_AppendLink)},               LETTERS + DIGITS},
+            {S_LINK,       S_LINK,       {TC(T_AppendLink)},               LETTERS + DIGITS + "_"},
 
             {S_END,        NextState(),  {},                               ""}
     };

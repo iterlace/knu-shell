@@ -63,9 +63,9 @@ protected:
             {S_SKIP_SEPARATOR, NextState(),      {TC(T_Delegate)},                                  CHARS},
 
             {S_START,          NextState(S_SKIP_SEPARATOR,true),  {TC(T_Delegate)},                 SPACES},
-            {S_START,          S_TEMPTOKEN,      {TC(T_AddTempToken), TC(T_AppendTempToken)},       LETTERS},
+            {S_START,          S_TEMPTOKEN,      {TC(T_AddTempToken), TC(T_AppendTempToken)},       LETTERS + "_"},
 
-            {S_TEMPTOKEN,      S_TEMPTOKEN,      {TC(T_AppendTempToken)},                           LETTERS + DIGITS},
+            {S_TEMPTOKEN,      S_TEMPTOKEN,      {TC(T_AppendTempToken)},                           LETTERS + DIGITS + "_"},
             {S_TEMPTOKEN,      S_COMMAND,        {TC(T_CastTempToCommand), TC(T_Delegate)},         SPACES + LINE_END},
             {S_TEMPTOKEN,      S_ASSIGNMENT,     {TC(T_CastTempToVariable), TC(T_AddAssignment)},   "="},
 
@@ -83,7 +83,7 @@ protected:
             {S_LINK_FRAME,     S_STRING,         {TC(T_Delegate), TC(T_Delegate)},                  CHARS + SPACES},
 
             {S_LINK,           S_STRING,         {TC(T_Skip)},                                      "}"},
-            {S_LINK,           S_LINK,           {TC(T_AppendLink)},                                LETTERS + DIGITS},
+            {S_LINK,           S_LINK,           {TC(T_AppendLink)},                                LETTERS + DIGITS + "_"},
 
             {S_END,            NextState(),      {},                                                ""}
     };
