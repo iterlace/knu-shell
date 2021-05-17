@@ -11,8 +11,15 @@
 #undef private
 
 
-TEST(InputParserTest, StripTest) {
-//    auto p = InputParser("echo \"Hello, world! Your name is ${USERNAME}!!!\"   ");
+TEST(InputParserTest, AssignmentTest) {
     auto p = InputParser("A=\"${B}\"");
-    p.run();
+    Command c = p.run();
 }
+
+
+TEST(InputParserTest, EchoTest) {
+    auto p = InputParser("echo \"Hello, world! Your name is ${USERNAME}!!!\"   ");
+    Command c = p.run();
+}
+
+

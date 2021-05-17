@@ -8,6 +8,9 @@
 #include "fsm.h"
 
 
+struct InvalidInput : public std::exception {};
+
+
 struct InputTransition : public Transition {
     std::string charset;
 };
@@ -24,7 +27,7 @@ private:
         S_SKIP_SEPARATOR = 1,
         S_TEMPTOKEN = 2,
         S_COMMAND = 3,
-        S_ASSIGNMENT_OPERATOR = 4,
+        S_ASSIGNMENT = 4,
         S_STRING = 5,
         S_LINK_FRAME = 6,
         S_LINK = 7,
@@ -54,33 +57,34 @@ protected:
     void T_CastTempToVariable();
 
 
-    const InputTransition transitions[18] = {
-            {S_SKIP_SEPARATOR, S_SKIP_SEPARATOR, {TC(T_Skip)}, SPACES},
-            {S_SKIP_SEPARATOR, NextState(), {TC(T_Delegate)}, CHARS},
+    const InputTransition transitions[19] = {
+            {S_SKIP_SEPARATOR, S_SKIP_SEPARATOR, {TC(T_Skip)},                                      SPACES},
+            {S_SKIP_SEPARATOR, NextState(),      {TC(T_Delegate)},                                  CHARS},
 
-            {S_START, NextState(S_SKIP_SEPARATOR, true), {TC(T_Delegate)}, SPACES},
-            {S_START, S_TEMPTOKEN, {TC(T_AddTempToken), TC(T_AppendTempToken)}, LETTERS},
+            {S_START,          NextState(S_SKIP_SEPARATOR,true),  {TC(T_Delegate)},                 SPACES},
+            {S_START,          S_TEMPTOKEN,      {TC(T_AddTempToken), TC(T_AppendTempToken)},       LETTERS},
 
-            {S_TEMPTOKEN, S_TEMPTOKEN, {TC(T_AppendTempToken)}, LETTERS+DIGITS},
-            {S_TEMPTOKEN, S_COMMAND, {TC(T_CastTempToCommand), TC(T_Delegate)}, SPACES},
-            {S_TEMPTOKEN, S_ASSIGNMENT_OPERATOR, {TC(T_CastTempToVariable), TC(T_AddAssignment)}, "="},
+            {S_TEMPTOKEN,      S_TEMPTOKEN,      {TC(T_AppendTempToken)},                           LETTERS + DIGITS},
+            {S_TEMPTOKEN,      S_COMMAND,        {TC(T_CastTempToCommand), TC(T_Delegate)},         SPACES + LINE_END},
+            {S_TEMPTOKEN,      S_ASSIGNMENT,     {TC(T_CastTempToVariable), TC(T_AddAssignment)},   "="},
 
-            {S_COMMAND, NextState(S_SKIP_SEPARATOR, true), {TC(T_Delegate)}, SPACES},
-            {S_COMMAND, S_STRING, {TC(T_AddString)}, "\""},
+            {S_COMMAND,        NextState(S_SKIP_SEPARATOR, true),  {TC(T_Delegate)},                SPACES},
+            {S_COMMAND,        S_STRING,         {TC(T_AddString)},                                 "\""},
+            {S_COMMAND,        S_END,            {TC(T_Skip)},                                      LINE_END},
 
-            {S_ASSIGNMENT_OPERATOR, S_STRING, {TC(T_AddString)}, "\""},
+            {S_ASSIGNMENT,     S_STRING,         {TC(T_AddString)},                                 "\""},
 
-            {S_STRING, S_LINK_FRAME, {TC(T_Skip)}, "$"},
-            {S_STRING, S_END, {TC(T_Skip)}, "\""},
-            {S_STRING, S_STRING, {TC(T_AppendText)}, CHARS + SPACES},
+            {S_STRING,         S_LINK_FRAME,     {TC(T_Skip)},                                      "$"},
+            {S_STRING,         S_END,            {TC(T_Skip)},                                      "\""},
+            {S_STRING,         S_STRING,         {TC(T_AppendText)},                                CHARS + SPACES},
 
-            {S_LINK_FRAME, S_LINK, {TC(T_AddLink)}, "{"},
-            {S_LINK_FRAME, S_STRING, {TC(T_Delegate), TC(T_Delegate)}, CHARS + SPACES},
+            {S_LINK_FRAME,     S_LINK,           {TC(T_AddLink)},                                   "{"},
+            {S_LINK_FRAME,     S_STRING,         {TC(T_Delegate), TC(T_Delegate)},                  CHARS + SPACES},
 
-            {S_LINK, S_STRING, {TC(T_Skip)}, "}"},
-            {S_LINK, S_LINK, {TC(T_AppendLink)}, LETTERS+DIGITS},
+            {S_LINK,           S_STRING,         {TC(T_Skip)},                                      "}"},
+            {S_LINK,           S_LINK,           {TC(T_AppendLink)},                                LETTERS + DIGITS},
 
-            {S_END, NextState(), {}, ""}
+            {S_END,            NextState(),      {},                                                ""}
     };
 };
 

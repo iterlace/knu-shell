@@ -22,11 +22,11 @@ std::string BaseStringToken::get_raw() const {
     return value;
 }
 
-CommandName::CommandName(const TempToken &token) {
+CommandToken::CommandToken(const TempToken &token) {
     value = token.get_raw();
 }
 
-VariableName::VariableName(const TempToken &token) {
+VariableToken::VariableToken(const TempToken &token) {
     value = token.get_raw();
 }
 
@@ -34,57 +34,54 @@ std::string AssignmentToken::to_str() const {
     return "=";
 }
 
-
-String::String() {
-
+StringToken::StringToken(const std::vector<Token *> &tokens) {
+    for (auto token : tokens) {
+        if (auto text = dynamic_cast<TextToken *>(token)) {
+            auto owned_text = new TextToken();
+            *owned_text = *text;
+            literals.push_back(owned_text);
+        } else if (auto link = dynamic_cast<LinkToken *>(token)) {
+            auto owned_link = new LinkToken();
+            *owned_link = *link;
+            literals.push_back(owned_link);
+        } else {
+            throw;
+        }
+    }
 }
 
-String::~String() {
+StringToken::~StringToken() {
     for (int i = 0; i < literals.size(); i++) {
         delete literals[i];
     }
 }
 
-//template<class T>
-//void String::push_back(T token) {
-//    static_assert(std::is_base_of<Token, T>::value, "Must be derived from Token");
-//    T *t = new T;
-//    *t = token;
-//    literals.push_back(t);
-//}
-
-const std::vector<Token *>& String::get_vector() {
+const std::vector<Token *> &StringToken::get_vector() const {
     return literals;
 }
 
-std::string String::format(std::map<std::string, std::string> variables) {
-    return "";
-}
 
-std::string String::to_str() const {
-    return "";
+std::string StringToken::to_str() const {
+    std::string output;
+    for (auto token : literals) {
+        if (auto text = dynamic_cast<TextToken *>(token)) {
+            output += text->to_str();
+        } else if (auto link = dynamic_cast<LinkToken *>(token)) {
+            output += "${" + link->to_str() + "}";
+        }
+    }
+    return output;
 }
 
 
 Command::Command(const std::vector<Token *> &tokens) {
     // TODO
-//    this->tokens.assign(tokens.begin(), tokens.end());
+    this->tokens.assign(tokens.begin(), tokens.end());
 }
 
-Command::~Command() {
-
+const std::vector<Token *> &Command::get_tokens() const {
+    return tokens;
 }
-
-
-Input::Input() : istream(&std::cin) {
-
-}
-
-Input::Input(std::istream &in, std::ostream &out) : istream(&in), ostream(&out) {
-
-}
-
-Input::~Input() = default;
 
 
 Command Input::next() {
@@ -114,7 +111,11 @@ std::string Input::read() {
 
 
 Command Input::parse(std::string const &input) {
-//    InputParser parser{input};
-
-    throw InvalidCommandError();
+    InputParser parser{input};
+    try {
+        Command c = parser.run();
+        return c;
+    } catch (InvalidInput &e) {
+        throw InvalidCommandError();
+    }
 }

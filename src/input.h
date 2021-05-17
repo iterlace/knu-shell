@@ -2,6 +2,7 @@
 #ifndef SHELL_INPUT_H
 #define SHELL_INPUT_H
 
+#include <iostream>
 #include <utility>
 #include <string>
 #include <regex>
@@ -41,17 +42,17 @@ public:
 
 
 // Command name (e.g "echo", "argv")
-class CommandName : public BaseStringToken {
+class CommandToken : public BaseStringToken {
 public:
-    CommandName(std::string s) : BaseStringToken(std::move(s)) {};
-    CommandName(const TempToken &token);
+    CommandToken(std::string s) : BaseStringToken(std::move(s)) {};
+    CommandToken(const TempToken &token);
 };
 
 
-// Resolved variable name (e.g USER="John", where USER is a VariableName)
-class VariableName : public BaseStringToken {
+// Resolved variable name (e.g USER="John", where USER is a VariableToken)
+class VariableToken : public BaseStringToken {
 public:
-    VariableName(const TempToken &token);
+    VariableToken(const TempToken &token);
 };
 
 
@@ -63,25 +64,25 @@ public:
 
 
 // Pure text without links
-class Text : public BaseStringToken {
+class TextToken : public BaseStringToken {
 public:
 };
 
 
 // Link to some variable
-class Link : public BaseStringToken {
+class LinkToken : public BaseStringToken {
 public:
 };
 
 
 /**
- * String is a composite class, containing Text and Link
+ * StringToken is a composite class, containing TextToken and LinkToken
  */
-class String : public Token {
+class StringToken : public Token {
 public:
-    String();
-
-    ~String();
+    StringToken() = default;
+    StringToken(const std::vector<Token *>&);
+    ~StringToken();
 
     template<class T>
     void push_back(T token) {
@@ -91,9 +92,8 @@ public:
         literals.push_back(t);
     };
 
-    const std::vector<Token *>& get_vector();
+    const std::vector<Token *>& get_vector() const;
 
-    std::string format(std::map<std::string, std::string> variables);
     std::string to_str() const override;
 
 protected:
@@ -104,8 +104,8 @@ protected:
 class Command {
 public:
     Command(const std::vector<Token *>&);
-    ~Command();
 
+    const std::vector<Token*>& get_tokens() const;
 private:
     std::vector<Token *> tokens;
 };
@@ -117,11 +117,9 @@ struct InvalidCommandError : public std::exception {
 
 class Input {
 public:
-    Input();
-
-    Input(std::istream &in, std::ostream &out);
-
-    ~Input();
+    Input() : istream(&std::cin), ostream(&std::cout) {};
+    Input(std::istream &in, std::ostream &out) : istream(&in), ostream(&out) {};
+    ~Input() = default;
 
     /**
      * Reads user input and returns a parsed command

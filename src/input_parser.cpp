@@ -2,15 +2,13 @@
 
 #include "input_parser.h"
 
-#include "fsm.cpp"
+#include "fsm.h"
 #include "util.h"
-
-
-struct InvalidInput : public std::exception {};
 
 
 InputParser::InputParser(std::string input) {
     this->input.assign(input.begin(), input.end());
+    this->input += LINE_END;
     index = 0;
 }
 
@@ -80,19 +78,19 @@ void InputParser::T_AddTempToken() {
 }
 
 void InputParser::T_AddString() {
-    auto t = new String();
+    auto t = new StringToken();
     tokens.push_back(t);
 }
 
 void InputParser::T_AddText() {
-    if (auto s = dynamic_cast<String *>(tokens.back())) {
-        s->push_back(Text());
+    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
+        s->push_back(TextToken());
     }
 }
 
 void InputParser::T_AddLink() {
-    if (auto s = dynamic_cast<String *>(tokens.back())) {
-        s->push_back(Link());
+    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
+        s->push_back(LinkToken());
     }
 }
 
@@ -109,11 +107,11 @@ void InputParser::T_AppendTempToken() {
 }
 
 void InputParser::T_AppendText() {
-    if (auto s = dynamic_cast<String *>(tokens.back())) {
+    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
         if (s->get_vector().empty()) {
             T_AddText();
         }
-        if (auto t = dynamic_cast<Text *>(s->get_vector().back())) {
+        if (auto t = dynamic_cast<TextToken *>(s->get_vector().back())) {
             t->push_back(get_char());
         } else {
             T_AddText();
@@ -123,11 +121,8 @@ void InputParser::T_AppendText() {
 }
 
 void InputParser::T_AppendLink() {
-    if (auto s = dynamic_cast<String *>(tokens.back())) {
-        if (s->get_vector().empty()) {
-            T_AddLink();
-        }
-        if (auto l = dynamic_cast<Link *>(s->get_vector().back())) {
+    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
+        if (auto l = dynamic_cast<LinkToken *>(s->get_vector().back())) {
             l->push_back(get_char());
         } else {
             T_AddLink();
@@ -138,7 +133,7 @@ void InputParser::T_AppendLink() {
 
 void InputParser::T_CastTempToCommand() {
     if (auto t = dynamic_cast<TempToken *>(tokens.back())) {
-        auto c = new CommandName(*t);
+        auto c = new CommandToken(*t);
         delete t;
         tokens.back() = c;
     }
@@ -146,7 +141,7 @@ void InputParser::T_CastTempToCommand() {
 
 void InputParser::T_CastTempToVariable() {
     if (auto t = dynamic_cast<TempToken *>(tokens.back())) {
-        auto v = new VariableName(*t);
+        auto v = new VariableToken(*t);
         delete t;
         tokens.back() = v;
     }

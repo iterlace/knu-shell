@@ -21,6 +21,7 @@ static const std::string SYMBOLS = "|!#$%&()*+,-./:;>=<?@[\\]^_`{}~\"\'";
 static const std::string CHARS = LETTERS + DIGITS + SYMBOLS;
 static const std::string SPACES = " ";
 static const std::string ANY_CHAR = "";
+static const std::string LINE_END = "\n";
 
 
 enum FSMResult {
