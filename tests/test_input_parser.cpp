@@ -12,7 +12,7 @@
 
 
 TEST(InputParserTest, StripTest) {
-//    auto p = InputParser("echo \"Hello, world! Your name is ${USERNAME}!!!\"");
+//    auto p = InputParser("echo \"Hello, world! Your name is ${USERNAME}!!!\"   ");
     auto p = InputParser("A=\"${B}\"");
     p.run();
 }

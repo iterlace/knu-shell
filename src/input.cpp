@@ -114,7 +114,7 @@ std::string Input::read() {
 
 
 Command Input::parse(std::string const &input) {
-    InputParser parser{input};
+//    InputParser parser{input};
 
     throw InvalidCommandError();
 }
