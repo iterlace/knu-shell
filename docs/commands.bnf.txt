@@ -1,0 +1,57 @@
+letter0: <letter> ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+digit0: <digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+symbol0: <symbol> ::= "|" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | ">" | "=" | "<" | "?" | "@" | "[" | "\" | "]" | "^" | "_" | "`" | "{" | "}" | "~"
+
+char0: <char> ::= letter
+char1: <char> ::= digit
+char2: <char> ::= symbol
+
+
+line-end0: <line-end>::="\n"
+line-end1: <line-end>::="\t"
+line-end2: <line-end>::="\l"
+line-end3: <line-end>::="\v"
+
+sws0: <single-ws> ::= "\s"
+sws1: <single-ws> ::= "\t"
+
+ws0: <ws> ::= <single-ws>
+ws1: <ws> ::= <single-ws><ws>
+
+ows0: <optional-ws> ::= ""
+ows1: <optional-ws> ::= <ws>
+
+
+varsymbol0: <variable-symbol> ::= <letter>
+varsymbol1: <variable-symbol> ::= "_"
+varsymbol2: <variable-symbol> ::= <digit>
+
+var0: <variable> ::= <letter> <variable-symbol>*
+var1: <variable> ::= "_" <variable-symbol>*
+
+var-placeholder0: <variable-placeholder> ::= "${" <variable> "}"
+
+
+fstr0: <format-str> ::= <variable-placeholder><format-str>
+fstr1: <format-str> ::= <char><format-str>
+fstr3: <format-str> ::= <optional-ws><format-str>
+
+
+argc0: <argc> ::= "argc"
+argv0: <argv> ::= "argv"
+envp0: <envp> ::= "envp"
+help0: <help> ::= "help"
+quit0: <quit> ::= "quit"
+echo0: <echo> ::= "echo"
+echo1: <echo> ::= "echo" "\"" <format-str> "\""
+setvar0: <setvar> ::= <variable> "=" "\"" <format-str> "\""
+
+scmd0: <single-cmd> ::= <argc>
+scmd1: <single-cmd> ::= <argv>
+scmd2: <single-cmd> ::= <envp>
+scmd3: <single-cmd> ::= <help>
+scmd4: <single-cmd> ::= <quit>
+scmd5: <single-cmd> ::= <echo>
+scmd6: <single-cmd> ::= <setvar>
+
+cmd0: <cmd> ::= <optional-ws><single-cmd><optional-ws><line-end>

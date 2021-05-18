@@ -6,7 +6,7 @@
 
 StringParser::StringParser(std::string input) {
     this->input.assign(input.begin(), input.end());
-    this->input += LINE_END;
+    this->input += "\n";
     index = 0;
 }
 

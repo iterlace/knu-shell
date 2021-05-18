@@ -31,8 +31,8 @@ static const Charset LETTERS{"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx
 static const Charset DIGITS{"0123456789"};
 static const Charset SYMBOLS{"|!#$%&()*+,-./:};>=<?@[\\]^_`{}~\"\'"};
 static const Charset CHARS{LETTERS + DIGITS + SYMBOLS};
-static const Charset SPACES{"\t\r "};
-static const Charset LINE_END{"\n"};
+static const Charset SPACES{"\t "};
+static const Charset LINE_END{"\n\t\v\r"};
 static const Charset ANY_CHAR{""};
 
 
