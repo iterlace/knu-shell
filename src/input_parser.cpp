@@ -73,45 +73,45 @@ void InputParser::T_Delegate() {
 }
 
 void InputParser::T_AddTempToken() {
-    auto t = new TempToken();
+    std::shared_ptr<TempToken> t(new TempToken());
     tokens.push_back(t);
 }
 
 void InputParser::T_AddString() {
-    auto t = new StringToken();
+    std::shared_ptr<StringToken> t(new StringToken());
     tokens.push_back(t);
 }
 
 void InputParser::T_AddText() {
-    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
+    if (auto s = dynamic_cast<StringToken *>(tokens.back().get())) {
         s->push_back(TextToken());
     }
 }
 
 void InputParser::T_AddLink() {
-    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
+    if (auto s = dynamic_cast<StringToken *>(tokens.back().get())) {
         s->push_back(LinkToken());
     }
 }
 
 void InputParser::T_AddAssignment() {
-    auto t = new AssignmentToken();
+    std::shared_ptr<AssignmentToken> t(new AssignmentToken());
     tokens.push_back(t);
 }
 
 void InputParser::T_AppendTempToken() {
-    if (auto t = dynamic_cast<TempToken *>(tokens.back())) {
+    if (auto t = dynamic_cast<TempToken *>(tokens.back().get())) {
         t->push_back(get_char());
     }
 
 }
 
 void InputParser::T_AppendText() {
-    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
+    if (auto s = dynamic_cast<StringToken *>(tokens.back().get())) {
         if (s->get_vector().empty()) {
             T_AddText();
         }
-        if (auto t = dynamic_cast<TextToken *>(s->get_vector().back())) {
+        if (auto t = dynamic_cast<TextToken *>(s->get_vector().back().get())) {
             t->push_back(get_char());
         } else {
             T_AddText();
@@ -121,8 +121,8 @@ void InputParser::T_AppendText() {
 }
 
 void InputParser::T_AppendLink() {
-    if (auto s = dynamic_cast<StringToken *>(tokens.back())) {
-        if (auto l = dynamic_cast<LinkToken *>(s->get_vector().back())) {
+    if (auto s = dynamic_cast<StringToken *>(tokens.back().get())) {
+        if (auto l = dynamic_cast<LinkToken *>(s->get_vector().back().get())) {
             l->push_back(get_char());
         } else {
             T_AddLink();
@@ -132,18 +132,18 @@ void InputParser::T_AppendLink() {
 }
 
 void InputParser::T_CastTempToCommand() {
-    if (auto t = dynamic_cast<TempToken *>(tokens.back())) {
-        auto c = new CommandToken(*t);
-        delete t;
-        tokens.back() = c;
+    if (auto t = dynamic_cast<TempToken *>(tokens.back().get())) {
+        std::shared_ptr<CommandToken> c(new CommandToken(*t));
+        tokens.pop_back();
+        tokens.push_back(c);
     }
 }
 
 void InputParser::T_CastTempToVariable() {
-    if (auto t = dynamic_cast<TempToken *>(tokens.back())) {
-        auto v = new VariableToken(*t);
-        delete t;
-        tokens.back() = v;
+    if (auto t = dynamic_cast<TempToken *>(tokens.back().get())) {
+        std::shared_ptr<VariableToken> v(new VariableToken(*t));
+        tokens.pop_back();
+        tokens.push_back(v);
     }
 }
 

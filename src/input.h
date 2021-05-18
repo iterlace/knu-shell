@@ -9,106 +9,22 @@
 #include <queue>
 #include <vector>
 #include <string>
+#include <memory>
 
 #include "fsm.h"
+#include "tokens.h"
 
-
-class Token {
-public:
-    virtual std::string to_str() const = 0;
-};
-
-/**
- * Base class for all flat, string-based tokens
- */
-class BaseStringToken : public Token {
-public:
-    BaseStringToken() = default;
-
-    BaseStringToken(std::string s);
-
-    void push_back(char c);
-
-    std::string to_str() const override;
-    std::string get_raw() const;
-protected:
-    std::string value;
-};
-
-
-class TempToken : public BaseStringToken {
-public:
-};
-
-
-// Command name (e.g "echo", "argv")
-class CommandToken : public BaseStringToken {
-public:
-    CommandToken(std::string s) : BaseStringToken(std::move(s)) {};
-    CommandToken(const TempToken &token);
-};
-
-
-// Resolved variable name (e.g USER="John", where USER is a VariableToken)
-class VariableToken : public BaseStringToken {
-public:
-    VariableToken(const TempToken &token);
-};
-
-
-class AssignmentToken : public Token {
-public:
-    AssignmentToken() = default;
-    std::string to_str() const override;
-};
-
-
-// Pure text without links
-class TextToken : public BaseStringToken {
-public:
-};
-
-
-// Link to some variable
-class LinkToken : public BaseStringToken {
-public:
-};
-
-
-/**
- * StringToken is a composite class, containing TextToken and LinkToken
- */
-class StringToken : public Token {
-public:
-    StringToken() = default;
-    StringToken(const std::vector<Token *>&);
-    ~StringToken();
-
-    template<class T>
-    void push_back(T token) {
-        static_assert(std::is_base_of<Token, T>::value, "Must be derived from Token");
-        T *t = new T;
-        *t = token;
-        literals.push_back(t);
-    };
-
-    const std::vector<Token *>& get_vector() const;
-
-    std::string to_str() const override;
-
-protected:
-    std::vector<Token *> literals;
-};
 
 
 class Command {
 public:
-    Command(const std::vector<Token *>&);
-    ~Command();
+    Command(const std::vector<std::shared_ptr<Token>>&);
+    bool operator==(const Command &other);
+    bool operator!=(const Command &other);
 
-    const std::vector<Token*>& get_tokens() const;
+    const std::vector<std::shared_ptr<Token>>& get_tokens() const;
 private:
-    std::vector<Token *> tokens;
+    std::vector<std::shared_ptr<Token>> tokens;
 };
 
 

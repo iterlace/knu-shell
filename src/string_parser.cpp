@@ -70,12 +70,12 @@ void StringParser::T_Delegate() {
 }
 
 void StringParser::T_AddText() {
-    auto t = new TextToken();
+    std::shared_ptr<TextToken> t(new TextToken());
     tokens.push_back(t);
 }
 
 void StringParser::T_AddLink() {
-    auto t = new LinkToken();
+    std::shared_ptr<LinkToken> t(new LinkToken());
     tokens.push_back(t);
 }
 
@@ -84,7 +84,7 @@ void StringParser::T_AppendText() {
     if (tokens.empty()) {
         T_AddText();
     }
-    if (auto t = dynamic_cast<TextToken *>(tokens.back())) {
+    if (auto t = dynamic_cast<TextToken *>(tokens.back().get())) {
         t->push_back(get_char());
     } else {
         T_AddText();
@@ -93,7 +93,7 @@ void StringParser::T_AppendText() {
 }
 
 void StringParser::T_AppendLink() {
-    if (auto l = dynamic_cast<LinkToken *>(tokens.back())) {
+    if (auto l = dynamic_cast<LinkToken *>(tokens.back().get())) {
         l->push_back(get_char());
     } else {
         T_AddLink();

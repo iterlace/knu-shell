@@ -4,6 +4,7 @@
 
 #include <vector>
 
+#include "tokens.h"
 #include "input.h"
 #include "fsm.h"
 #include "charset.h"
@@ -36,7 +37,7 @@ private:
     };
 protected:
     std::string input;
-    std::vector<Token *> tokens;
+    std::vector<std::shared_ptr<Token>> tokens;
     unsigned int index;
 
     char get_char();

@@ -54,9 +54,9 @@ int Shell::run() {
 std::optional<Shell::ShellFn> Shell::find_executor(const Command& command) {
     const auto& tokens = command.get_tokens();
 
-    if (auto v = dynamic_cast<VariableToken *>(tokens[0])) {
+    if (auto v = dynamic_cast<VariableToken *>(tokens[0].get())) {
         return &Shell::set;
-    } else if (auto c = dynamic_cast<CommandToken *>(tokens[0])) {
+    } else if (auto c = dynamic_cast<CommandToken *>(tokens[0].get())) {
         std::string cmd_name = c->to_str();
         if (commands.contains(cmd_name)) {
             return commands[cmd_name];
@@ -68,9 +68,9 @@ std::optional<Shell::ShellFn> Shell::find_executor(const Command& command) {
 std::string Shell::format_string(const StringToken& string_token) const {
     std::string final_string;
     for (auto token : string_token.get_vector()) {
-        if (auto text = dynamic_cast<TextToken *>(token)) {
+        if (auto text = dynamic_cast<TextToken *>(token.get())) {
             final_string += token->to_str();
-        } else if (auto link = dynamic_cast<LinkToken *>(token)) {
+        } else if (auto link = dynamic_cast<LinkToken *>(token.get())) {
             std::string variable_name = link->to_str();
             if (variables.contains(variable_name)) {
                 auto parser = StringParser(variables.find(variable_name)->second);
@@ -90,7 +90,7 @@ void Shell::echo(const Command& command) {
         sprint(*ostream, "\n");
         return;
     }
-    if (auto text = dynamic_cast<StringToken *>(tokens[1])) {
+    if (auto text = dynamic_cast<StringToken *>(tokens[1].get())) {
         std::string formatted_text = format_string(*text);
         sprint(*ostream, "%s\n", formatted_text.c_str());
     }
@@ -98,8 +98,8 @@ void Shell::echo(const Command& command) {
 
 void Shell::set(const Command& command) {
     auto& tokens = command.get_tokens();
-    auto name = dynamic_cast<VariableToken *>(tokens[0]);
-    auto value = dynamic_cast<StringToken *>(tokens[2]);
+    auto name = dynamic_cast<VariableToken *>(tokens[0].get());
+    auto value = dynamic_cast<StringToken *>(tokens[2].get());
     if (!name || !value) {
         throw InvalidCommandError();
     }
