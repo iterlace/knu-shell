@@ -70,12 +70,12 @@ void StringParser::T_Delegate() {
 }
 
 void StringParser::T_AddText() {
-    std::shared_ptr<TextToken> t(new TextToken());
+    auto t = std::make_shared<TextToken>();
     tokens.push_back(t);
 }
 
 void StringParser::T_AddLink() {
-    std::shared_ptr<LinkToken> t(new LinkToken());
+    auto t = std::make_shared<LinkToken>();
     tokens.push_back(t);
 }
 

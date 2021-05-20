@@ -73,12 +73,12 @@ void InputParser::T_Delegate() {
 }
 
 void InputParser::T_AddTempToken() {
-    std::shared_ptr<TempToken> t(new TempToken());
+    auto t = std::make_shared<TempToken>();
     tokens.push_back(t);
 }
 
 void InputParser::T_AddString() {
-    std::shared_ptr<StringToken> t(new StringToken());
+    auto t = std::make_shared<StringToken>();
     tokens.push_back(t);
 }
 
@@ -95,7 +95,7 @@ void InputParser::T_AddLink() {
 }
 
 void InputParser::T_AddAssignment() {
-    std::shared_ptr<AssignmentToken> t(new AssignmentToken());
+    auto t = std::make_shared<AssignmentToken>();
     tokens.push_back(t);
 }
 
@@ -133,7 +133,7 @@ void InputParser::T_AppendLink() {
 
 void InputParser::T_CastTempToCommand() {
     if (auto t = dynamic_cast<TempToken *>(tokens.back().get())) {
-        std::shared_ptr<CommandToken> c(new CommandToken(*t));
+        auto c = std::make_shared<CommandToken>(*t);
         tokens.pop_back();
         tokens.push_back(c);
     }
@@ -141,7 +141,7 @@ void InputParser::T_CastTempToCommand() {
 
 void InputParser::T_CastTempToVariable() {
     if (auto t = dynamic_cast<TempToken *>(tokens.back().get())) {
-        std::shared_ptr<VariableToken> v(new VariableToken(*t));
+        auto v = std::make_shared<VariableToken>(*t);
         tokens.pop_back();
         tokens.push_back(v);
     }
