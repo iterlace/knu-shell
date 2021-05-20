@@ -27,7 +27,6 @@ Command InputParser::run() {
         if (update_status == OK) {
             index++;
         } else if (update_status == INVALID_STATE) {
-//            std::cout << "InvalidInput(); Current State is " << int(current_state().value()) << std::endl;
             throw InvalidInput();
         } else if (update_status == END) {
             break;
@@ -103,7 +102,6 @@ void InputParser::T_AppendTempToken() {
     if (auto t = dynamic_cast<TempToken *>(tokens.back().get())) {
         t->push_back(get_char());
     }
-
 }
 
 void InputParser::T_AppendText() {

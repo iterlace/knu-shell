@@ -41,7 +41,13 @@ private:
     // environment vars and added at runtime variables
     std::map<std::string, std::string> variables;
     // commands
-    std::map<std::string, ShellFn> commands;
+    std::map<std::string, ShellFn> commands = {
+        {"echo", &Shell::echo},
+        {"envp", &Shell::envp},
+        {"argc", &Shell::argc},
+        {"argv", &Shell::argv},
+        {"help", &Shell::help},
+    };
 
     std::optional<ShellFn> find_executor(const Command& command);
     std::string format_string(const StringToken& string_token) const;

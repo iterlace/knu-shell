@@ -6,7 +6,7 @@
 #include "string_parser.h"
 
 
-Shell::Shell(std::istream& in, std::ostream& out, char **argv, char **envp) : istream(&in), ostream(&out) {
+Shell::Shell(std::istream &in, std::ostream &out, char **argv, char **envp) : istream(&in), ostream(&out) {
     for (char **var = envp; *var != nullptr; var++) {
         // push to the environment vector
         environment.emplace_back(*var);
@@ -14,7 +14,7 @@ Shell::Shell(std::istream& in, std::ostream& out, char **argv, char **envp) : is
         // parse and push to the local variables hashmap
         std::string var_s = *var;
         std::string name = var_s.substr(0, var_s.find('='));
-        std::string value = var_s.substr(var_s.find('=')+1, var_s.length()-1);
+        std::string value = var_s.substr(var_s.find('=') + 1, var_s.length() - 1);
         variables[name] = value;
     }
     for (char **arg = argv; *arg != nullptr; arg++) {
@@ -22,12 +22,6 @@ Shell::Shell(std::istream& in, std::ostream& out, char **argv, char **envp) : is
     }
 
     input = Input(in, out);
-
-    commands["echo"] = &Shell::echo;
-    commands["envp"] = &Shell::envp;
-    commands["argc"] = &Shell::argc;
-    commands["argv"] = &Shell::argv;
-    commands["help"] = &Shell::help;
 }
 
 Shell::~Shell() = default;
@@ -42,7 +36,7 @@ int Shell::run() {
             } else {
                 (this->*fn.value())(cmd);
             }
-        } catch (InvalidCommandError& e) {
+        } catch (InvalidCommandError &e) {
             help();
             continue;
         }
@@ -51,10 +45,10 @@ int Shell::run() {
 }
 
 
-std::optional<Shell::ShellFn> Shell::find_executor(const Command& command) {
-    const auto& tokens = command.get_tokens();
+std::optional<Shell::ShellFn> Shell::find_executor(const Command &command) {
+    const auto &tokens = command.get_tokens();
 
-    if (auto v = dynamic_cast<VariableToken *>(tokens[0].get())) {
+    if (tokens[0].get()->type() == VARIABLE) {
         return &Shell::set;
     } else if (auto c = dynamic_cast<CommandToken *>(tokens[0].get())) {
         std::string cmd_name = c->to_str();
@@ -65,9 +59,9 @@ std::optional<Shell::ShellFn> Shell::find_executor(const Command& command) {
     return std::nullopt;
 }
 
-std::string Shell::format_string(const StringToken& string_token) const {
+std::string Shell::format_string(const StringToken &string_token) const {
     std::string final_string;
-    for (auto token : string_token.get_vector()) {
+    for (auto &token : string_token.get_vector()) {
         if (auto text = dynamic_cast<TextToken *>(token.get())) {
             final_string += token->to_str();
         } else if (auto link = dynamic_cast<LinkToken *>(token.get())) {
@@ -83,9 +77,8 @@ std::string Shell::format_string(const StringToken& string_token) const {
 }
 
 
-
-void Shell::echo(const Command& command) {
-    auto& tokens = command.get_tokens();
+void Shell::echo(const Command &command) {
+    auto &tokens = command.get_tokens();
     if (tokens.size() == 1) {
         sprint(*ostream, "\n");
         return;
@@ -96,8 +89,8 @@ void Shell::echo(const Command& command) {
     }
 }
 
-void Shell::set(const Command& command) {
-    auto& tokens = command.get_tokens();
+void Shell::set(const Command &command) {
+    auto &tokens = command.get_tokens();
     auto name = dynamic_cast<VariableToken *>(tokens[0].get());
     auto value = dynamic_cast<StringToken *>(tokens[2].get());
     if (!name || !value) {
@@ -108,19 +101,19 @@ void Shell::set(const Command& command) {
 }
 
 
-void Shell::argc(const Command& command) {
+void Shell::argc(const Command &command) {
     sprint(*ostream, "%zu\n", arguments.size());
 }
 
 
-void Shell::argv(const Command& command) {
-    for (const std::string& var : arguments)
+void Shell::argv(const Command &command) {
+    for (const std::string &var : arguments)
         sprint(*ostream, "%s\n", var.c_str());
 }
 
 
-void Shell::envp(const Command& command) {
-    for (const std::string& var : environment)
+void Shell::envp(const Command &command) {
+    for (const std::string &var : environment)
         sprint(*ostream, "%s\n", var.c_str());
 }
 
@@ -135,7 +128,7 @@ void Shell::help() {
                      "  quit\n");
 }
 
-void Shell::help(const Command& command) {
+void Shell::help(const Command &command) {
     help();
 }
 
