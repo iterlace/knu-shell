@@ -40,14 +40,8 @@ private:
     std::vector<std::string> environment;
     // environment vars and added at runtime variables
     std::map<std::string, std::string> variables;
-    // commands
-    std::map<std::string, ShellFn> commands = {
-        {"echo", &Shell::echo},
-        {"envp", &Shell::envp},
-        {"argc", &Shell::argc},
-        {"argv", &Shell::argv},
-        {"help", &Shell::help},
-    };
+    //
+    std::vector<std::string> history;
 
     std::optional<ShellFn> find_executor(const Command& command);
     std::string format_string(const StringToken& string_token) const;
@@ -58,8 +52,21 @@ private:
     void argc(const Command& command);
     void argv(const Command& command);
     void envp(const Command& command);
+    void save(const Command& command);
+    void load(const Command& command);
     void help();
     void help(const Command& command);
+
+    // commands
+    std::map<std::string, ShellFn> commands = {
+        {"echo", &Shell::echo},
+        {"envp", &Shell::envp},
+        {"argc", &Shell::argc},
+        {"argv", &Shell::argv},
+        {"save", &Shell::save},
+        {"load", &Shell::load},
+        {"help", &Shell::help},
+    };
 };
 
 

@@ -18,13 +18,15 @@
 
 class Command {
 public:
-    Command(const std::vector<std::shared_ptr<Token>>&);
+    Command(const std::vector<std::shared_ptr<Token>>&, std::string origin);
     bool operator==(const Command &other);
     bool operator!=(const Command &other);
 
     const std::vector<std::shared_ptr<Token>>& get_tokens() const;
+    std::string to_str() const;
 private:
     std::vector<std::shared_ptr<Token>> tokens;
+    std::string origin;
 };
 
 

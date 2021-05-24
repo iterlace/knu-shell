@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <string>
 
 #include "shell.h"
@@ -30,6 +31,7 @@ int Shell::run() {
     while (!input.end()) {
         try {
             Command cmd = input.next();
+            history.push_back(cmd.to_str());
             std::optional<ShellFn> fn = find_executor(cmd);
             if (!fn.has_value()) {
                 throw InvalidCommandError();
@@ -118,6 +120,46 @@ void Shell::envp(const Command &command) {
 }
 
 
+void Shell::save(const Command &command) {
+    auto &tokens = command.get_tokens();
+    auto filepath_token = dynamic_cast<StringToken *>(tokens[1].get());
+    std::string filepath = format_string(*filepath_token);
+
+    std::ofstream file(filepath, std::ios::out | std::ios::trunc);
+    if (!file.is_open()) {
+        sprint(*ostream, "Error writing to the file %s\n", filepath.c_str());
+        return;
+    }
+    for (const auto &record : history) {
+        file << record << std::endl;
+    }
+    file.close();
+
+    sprint(*ostream, "History saved to %s\n", filepath.c_str());
+}
+
+
+void Shell::load(const Command &command) {
+    auto &tokens = command.get_tokens();
+    auto filepath_token = dynamic_cast<StringToken *>(tokens[1].get());
+    std::string filepath = format_string(*filepath_token);
+
+    std::ifstream file(filepath, std::ios::in);
+    if (!file.is_open()) {
+        sprint(*ostream, "Error opening file %s\n", filepath.c_str());
+        return;
+    }
+
+    std::string record;
+    history.clear();
+    while (std::getline(file, record)) {
+        history.push_back(record);
+        sprint(*ostream, "%s\n", record.c_str());
+    }
+    file.close();
+}
+
+
 void Shell::help() {
     sprint(*ostream, "Supported commands and instructions:\n"
                      "  variable=\"value\"\n"
@@ -125,6 +167,8 @@ void Shell::help() {
                      "  argc\n"
                      "  argv\n"
                      "  envp\n"
+                     "  save \"/file/path.txt\"\n"
+                     "  load \"/file/path.txt\"\n"
                      "  quit\n");
 }
 

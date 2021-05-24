@@ -7,8 +7,9 @@
 
 
 
-Command::Command(const std::vector<std::shared_ptr<Token>> &tokens) {
+Command::Command(const std::vector<std::shared_ptr<Token>> &tokens, std::string origin) {
     this->tokens.assign(tokens.begin(), tokens.end());
+    this->origin = origin;
 }
 
 bool Command::operator==(const Command &other) {
@@ -26,6 +27,10 @@ bool Command::operator!=(const Command &other) {
 
 const std::vector<std::shared_ptr<Token>> &Command::get_tokens() const {
     return tokens;
+}
+
+std::string Command::to_str() const {
+    return origin;
 }
 
 

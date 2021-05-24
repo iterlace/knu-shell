@@ -33,7 +33,12 @@ Command InputParser::run() {
         }
     }
 
-    return Command(tokens);
+    std::string clear_input = input;
+    if (clear_input[clear_input.length()-1] ==  '\n') {
+        clear_input.pop_back();
+    }
+
+    return Command(tokens, clear_input);
 }
 
 
